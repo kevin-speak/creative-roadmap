@@ -13,6 +13,10 @@ Reconcile the Notion TW Creative Roadmap against live Meta ads and BigQuery SP s
 **Checkbox convention:** Notion checkboxes read/write as the strings `"__YES__"` (checked) and `"__NO__"` (unchecked).
 **Date convention:** date properties are written through expanded properties — `date:Last synced:start`, `date:Launch date:start`, `date:Paused date:start` — as ISO `YYYY-MM-DD`.
 
+**JOIN KEY (changed 2026-08-16):** the roadmap `Name` is a clean 繁體中文 display name for humans — it does NOT equal the Meta ad name. Match rows to Meta ads by `Meta ad ID(s)` (primary) and `Ad Name` (secondary; holds the exact Meta ad name). Never overwrite a human-set `Name`.
+
+**CAMPAIGN SCOPE:** the roadmap tracks current campaigns only (26Q3 brand campaign + ongoing ios trial/purchase testing/scaling/winning). Do NOT create rows for ads in legacy 2025-era campaigns (campaign `TW_Meta_N/A_M3_Q3Reach_brandmarketing` id 120229358097810167, or any campaign whose name marks a 25Qx quarter) — skip them silently even if ACTIVE.
+
 ## STEP 1 — Pull the roadmap
 
 Query the roadmap in SQL mode:
@@ -33,10 +37,10 @@ Note: the rollup `License days left` is **not queryable in SQL** (it is in the d
 
 `ads_get_ad_entities` on account `1148917790153640`, ad level, fields: `id, name, effective_status, created_time, spend` — pull twice: `date_preset: maximum` (lifetime spend) and `date_preset: last_7d`. Keep only `effective_status = ACTIVE` for the "live" set, but keep the full result so Step 6 can see paused/archived ads.
 
-For every ACTIVE Meta ad whose `id` is not in the roadmap map: create a roadmap page in `collection://46a9a0c5-2240-4576-8574-ce81793d224b` with
+For every ACTIVE Meta ad whose `id` is not in the roadmap map (and not in a legacy 25Qx campaign — see CAMPAIGN SCOPE): create a roadmap page in `collection://46a9a0c5-2240-4576-8574-ce81793d224b` with
 
-- `Name` = the Meta ad name verbatim (Name is the join key and must equal the Meta ad name)
-- `Ad Name` = same string
+- `Name` = a clean 繁體中文 display name generated from the ad-name segments: format `[創作者/類型] - 主題` (e.g. `Camel UGC - 職場英文溝通・AI 主管模擬`, `26Q3 促銷靜圖 - P1 倒數 Day1`, `品牌影片 30 秒`). Translate the c4 angle (painpoint 痛點 / testimonial 見證 / productdemo 產品示範 / speakmethod 學習方法 / valueprop 價值主張 / scenario 情境 / campaign 檔期 / discount 折扣), use the c6 creator handle, and the c8 descriptor in natural zh-TW. Keep unique vs existing names; keep v1/v2 markers when needed; drop pixel sizes. Traditional Chinese only.
+- `Ad Name` = the Meta ad name verbatim (join key — must be exact)
 - `Meta ad ID(s)` = the ad id
 - `Production Status` = `On Air`
 - `Channel` = `["Meta"]`
@@ -176,6 +180,10 @@ ORDER BY p.sp_score DESC
 
 Rows come back per (ad_id, os). Collapse to one row per ad_id: sum `trial_starts_total` and `spend_total`, take the **best (highest) `sp_score`**, and recompute `cpft = summed spend_total / summed trial_starts_total` (NULL when trial starts are 0). Join to roadmap rows by ad_id.
 
+## STEP 3b — LTV/CAC and CPFT for EVERY matched ad (not just SP-scored ones)
+
+CPFT and LTV/CAC must be filled for every live row where the denominators are real, even when the ad has no SP score yet. Run the LTV/CAC query stored at `automation/ltv_cac.sql` in this repo (same BigQuery project) — it computes lifetime per-ad: spend, trial_starts, CPFT, est_conversions (initial purchases + trial starts × Meta-channel trial-convert-rate), LTV (est_conversions × cohort_ltv month_index 35), CAC, and LTV/CAC. Collapse multi-ID rows by summing components before ratios. Leave a field empty (do not write 0) when its denominator is 0 — typical for awareness-campaign ads.
+
 ## STEP 4 — Write metrics back (only what changed)
 
 For each matched roadmap row, compute:
@@ -188,7 +196,8 @@ For each matched roadmap row, compute:
   - `Mid-tier` — 1.5 <= sp_score < 2.0
   - `Pause` — sp_score < 1.5
   - `Testing` — no sp_score (insufficient spend)
-- **CPFT** = cpft rounded to 2 decimals (leave untouched if NULL)
+- **CPFT** = cpft rounded to 2 decimals (from Step 3b — write for every row with trial starts > 0, SP score or not; leave untouched if NULL)
+- **LTV/CAC** = from Step 3b, rounded to 2 decimals (write whenever computable, SP score or not; leave untouched if NULL)
 - **Spend to date** = lifetime spend from Meta (Step 2), summed across all ad IDs on the row
 
 Call `notion-update-page` once per row and include **only properties whose value actually differs** from what Step 1 returned — this keeps the Notion edit history readable. Always set `date:Last synced:start` = today, even when nothing else changed. If a row has multiple ad IDs, sum spend across them and use the best SP among them (as collapsed above).

@@ -63,7 +63,9 @@ Not materialized anywhere — replicated from the Hex "[TW] Meta Ads SP Dashboar
 
 ## Conventions & guardrails
 
-- **Join key**: Roadmap row `Name` = exact Meta ad name; `Meta ad ID(s)` = comma-separated real ad IDs (15+ digits). Rows created from ideas carry a placeholder name that must be replaced before launch.
+- **Join key** (changed 2026-08-16): `Meta ad ID(s)` (primary) + `Ad Name` = exact Meta ad name (secondary). Row `Name` is a clean 繁體中文 display name for humans — going forward it's filled by the team before launch; the nightly sync generates one only for ads it discovers on its own.
+- **Campaign scope**: current campaigns only (26Q3 + ongoing trial/purchase BAU). Legacy 25Qx campaigns (e.g. `TW_Meta_N/A_M3_Q3Reach_brandmarketing`) are excluded; their 13 recon rows were removed on 2026-08-16.
+- **LTV/CAC + CPFT**: filled for every live row with real denominators (even without an SP score), from `ltv_cac.sql` — fatigue-report methodology (est_conversions × cohort LTV month 35). `Last synced` is stamped on every write.
 - **Sample rows**: the ~99 rows dated pre-2026-08-16 with fake ad IDs (`S55`, `UGC9`, …) are ignored by every routine.
 - **Dedupe markers**: Ready-to-Test pings leave an `rt-ping-sent` Notion comment; pause-reason nags leave `pause-ping-sent`. Iteration ideas dedupe on `Ad id`/`Ref`.
 - Routines only write to Notion and Slack. Nothing ever writes to Meta or BigQuery.
@@ -78,7 +80,6 @@ Not materialized anywhere — replicated from the Hex "[TW] Meta Ads SP Dashboar
 
 ## Known limitations (v1)
 
-- `LTV/CAC` on the roadmap is not yet auto-filled (the Daily Ad Fatigue Report computes it but doesn't write to Notion) — candidate for v2.
 - Watch-flag CPFT trend compares against yesterday's stored CPFT, not a true trailing average.
 - Brand/awareness campaigns (Reach/Thruplay/Traffic) have no meaningful SP; their rows stay "Testing".
 - Ads renamed in Meta after launch still match by ad ID, but the row name will drift from the Meta name until someone updates it.

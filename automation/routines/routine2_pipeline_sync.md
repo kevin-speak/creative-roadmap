@@ -70,8 +70,10 @@ Page body for the new roadmap row:
 ```
 Created from Creatives Ideas by the pipeline sync on <YYYY-MM-DD>.
 
-⚠️ Name is a placeholder. It MUST be updated to the exact final Meta ad name
-before launch — Name is the join key the nightly sync uses to match Meta ads.
+⚠️ Before launch, a human fills two fields:
+- Name: the clean 繁體中文 display name for this creative
+- Ad Name: the exact Meta ad name (this + Meta ad ID(s) is how the nightly
+  sync matches the row to Meta — Name itself is display-only)
 
 Source idea: <idea page URL>
 ```
