@@ -15,11 +15,18 @@ End-to-end automation for the TW creative pipeline: idea intake → production �
 | Routine | Trigger ID | Schedule (Taipei) | What it does |
 |---|---|---|---|
 | Creative Ideas Sync to Notion | `trig_01CtXgi8zb5PzTXAMPzaAdwr` | Wed 17:00 | (pre-existing) Slack #tw-creative → Ideas board |
-| TW Creative pipeline sync | `trig_011YVskPFCio6a2FqD5Pxx2o` | Daily 09:00 & 15:00 | Ideas (Status=In progress) → Roadmap rows (Plan); Roadmap (Ready-to-Test+) → Ideas marked Done; Ready-to-Test Slack ping tagging Kevin; design-done hints |
-| TW Creative Roadmap nightly sync | `trig_01DeeYQ1LhpKj3dnq3xJavbW` | Daily 10:00 | Meta live ads + BigQuery SP scores → Roadmap (SP score/status, CPFT, spend, Last synced); creates rows for unknown live ads; pause detection + owner pings; Hit-ad → #hit-ads-library; watch flags; archive hygiene |
-| TW winning creative iteration analyst | `trig_019r4irHEvw8tm7fmDcoZgJQ` | Mon 10:30 | Hit Ad / P2 Loser rows → Motion analysis → iteration brief → "Winning Iteration" idea in Ideas board (cap 5/week) |
+| TW Creative pipeline sync | `trig_011EhN2rJaHcNoAKHPAY8it3` | Daily 09:00 & 15:00 | Ideas (Status=In progress) → Roadmap rows (Plan); Roadmap (Ready-to-Test+) → Ideas marked Done; Ready-to-Test Slack ping tagging Kevin; design-done hints |
+| TW Creative Roadmap nightly sync | `trig_01EZ44tzBdZfTfJy1scvf128` | Daily 10:00 | Meta live ads + BigQuery SP scores → Roadmap (SP score/status, CPFT, spend, Last synced); creates rows for unknown live ads; pause detection + owner pings; Hit-ad → #hit-ads-library; watch flags; archive hygiene |
+| TW winning creative iteration analyst | `trig_01JqGLRu34KTW38yFpWNpDDt` | Mon 10:30 | Hit Ad / P2 Loser rows → Motion analysis → iteration brief → "Winning Iteration" idea in Ideas board (cap 5/week) |
 
-Routine prompts (the source of truth for what each fired session does) are in [`routines/`](routines/). To change a routine's behavior, edit the prompt there and apply it with `update_trigger`.
+Routine prompts (the source of truth for what each fired session does) are in [`routines/`](routines/). To change a routine's behavior, edit the runbook file here, push, and the next fire picks it up (the trigger prompt tells the session to execute the runbook from this branch).
+
+**Architecture note (important):** the three new routines fire *into the persistent automation session* (`session_014szRHcYSqZhSCd695DuyA9`) rather than spawning fresh sessions. Agent-created triggers cannot carry MCP connector grants — fresh sessions they spawn have no Notion/Slack/Meta/BigQuery tools (verified 2026-08-16: both fresh-session test runs completed without making a single external call). The persistent session holds all connectors, so firing into it works. If that session is ever archived/lost, recreate the routines from the claude.ai Routines UI (paste the runbook prompts) — UI-created routines store connector grants properly and can then use fresh sessions.
+
+**Verified 2026-08-16 (supervised scoped tests, 26Q3 web scaling UGC ads):**
+- Nightly sync: wrote SP 10.81/CPFT $88.95 (Camel) and SP 5.91/CPFT $127.95 (Sophia), both correctly classified P2 Loser; exactly the 2 in-scope rows touched; paused ads correctly skipped; multi-ID collapse applied.
+- Iteration analyst: pulled Motion metrics + taxonomy for both P2 Losers, produced CPFT-fix briefs, created 2 "Winning Iteration" ideas with Ad id/Ref dedupe keys, posted Slack summary.
+- Pipeline sync: dry run only — flagged that 40 ideas sit at "In progress" and would all become Plan rows on the first live run (statuses need human curation first).
 
 ## The lifecycle
 
