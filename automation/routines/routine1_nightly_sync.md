@@ -226,6 +226,15 @@ A roadmap row currently `On Air` or `Scale` whose **every** listed Meta ad ID is
 
 If some but not all of a row's ad IDs went inactive, do nothing — the creative is still running.
 
+## STEP 6b — Influencer license upkeep
+
+For live rows (`On Air`/`Scale`) whose `Relation to Influencer Licenses` is non-empty:
+
+1. **Start the countdown at launch.** `notion-fetch` the related license page(s). If a license's `Launch date` is EMPTY and the roadmap row is now live, set the license's `date:Launch date:start` = the roadmap row's Launch date (the `License end day` / `License days left` formulas take over from there).
+2. **Attach new cuts to existing licenses.** When Step 2 creates a row for a newly-discovered ad whose c6 creator segment matches an influencer license created in the last 60 days (match on the creator handle in `SNS Account`/`Name`), set the new row's `Relation to Influencer Licenses` to that license — hook variants and frame cuts share the source license.
+3. **Expiry early-warning.** If a live row's `License days left` rollup is ≤ 3 (fetch per page; the rollup is not SQL-queryable), add a line to the Slack report under `*⚠️ License expiring*` with the row name, days left, and license end day — so Kevin can pause or renew BEFORE Meta runs an unlicensed ad.
+4. Pause reason prefill for `License Expired` (Step 6) uses this same rollup — a paused influencer ad with days left ≤ 0 explains itself.
+
 ## STEP 7 — Watch flags
 
 For rows that are still live (`On Air`/`Scale`):

@@ -87,6 +87,35 @@ For each roadmap row (passing the sample-row guard) whose `Reference` resolves t
 
 Ideas with Status `Archive` are also left alone — do not resurrect them.
 
+## STEP 3.5 — #tw-ads influencer intake (每日)
+
+Read messages from Slack channel #tw-ads (`C085DFM380K`) posted in the past 3 days (use `slack_read_channel` with oldest = 3 days ago). Find 請求支援 posts — messages containing `請求支援` AND `廣告上傳`. These are influencer ad-upload requests with a fixed template: `專案類別` (creator + link), `Due Date`, `Emergency`, `廣告檔案` (Drive link or fbadcode), `是否可剪輯、加框`, `廣告類型` (license, e.g. "Meta 廣告主四週"), `創作者帳號`, `utm 名稱`.
+
+For each request, dedupe against the Influencer Licenses DB (`collection://bf9dd8a5-0331-47a3-9d04-9c15bea80071`): skip if a license row already has the same `Tracking ID` (utm) or the same `File` link.
+
+For new requests, create TWO linked pages:
+
+1. **License row** in `collection://bf9dd8a5-0331-47a3-9d04-9c15bea80071`:
+   - `Name` = `{creator} {YYYY-MM} 廣告主授權（{duration}）`
+   - `License periods` = days parsed from 廣告類型: 一週7 / 兩週14 / 三週21 / 四週28 / 六週42 / 兩個月60 / 三個月90; if unparseable, leave empty and flag in the summary
+   - `Licensed platform` = ["Meta"] (+ "Google" if the type mentions YT/YouTube/Google)
+   - `Licenses Terms` = the 是否可剪輯加框 line + any 合作片段 timestamps + the raw 廣告類型 text
+   - `File` = the Drive/FB link; `Ad code` = fbadcode if present; `SNS Account` = creator account URL; `Tracking ID` = the utm 名稱
+   - `Influencer Priority` from Emergency/Due wording: 大咖/High → P0-P1, Medium → P2, Low → P3
+   - `Launch date` = LEAVE EMPTY (the nightly sync stamps it when the ad actually goes live)
+   - Page body: request date, requester, due-date text, Slack permalink
+2. **Roadmap row** in `collection://46a9a0c5-2240-4576-8574-ce81793d224b`:
+   - `Name` = `{creator} - 廣告素材 ({YYYY.MM})` (placeholder 中文 — humans refine it)
+   - `Production Status` = `Ready-to-Test` (the asset arrives production-ready; uploading IS the next step, so the Ready-to-Test ping in Step 4 will tag Kevin automatically)
+   - `Source` = `Influencer`, `Format` = `Influencer`, `Category` = `10. Influencer`, `Channel` = `["Meta"]`
+   - `Priority` mirroring the license priority (P0→P0 etc.)
+   - `Reference` = the 廣告檔案 link; `Relation to Influencer Licenses` = the license row just created
+   - `Ad Name` and `Meta ad ID(s)` = LEAVE EMPTY — Kevin fills them manually after uploading to Meta
+   - Page body: due-date text, utm 名稱, Slack permalink
+   - If a matching creator's roadmap rows already exist for this same request (dedupe check above hit), do nothing.
+
+List every intake in the Slack summary under `*Influencer intake*`.
+
 ## STEP 4 — Ready-to-Test pings
 
 For each roadmap row with `Production Status` = `Ready-to-Test` (sample-row guard applies):
