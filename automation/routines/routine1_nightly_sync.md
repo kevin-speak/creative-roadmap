@@ -182,7 +182,7 @@ Rows come back per (ad_id, os). Collapse to one row per ad_id: sum `trial_starts
 
 ## STEP 3b — LTV/CAC and CPFT for EVERY matched ad (not just SP-scored ones)
 
-CPFT and LTV/CAC must be filled for every live row where the denominators are real, even when the ad has no SP score yet. Run the LTV/CAC query stored at `automation/ltv_cac.sql` in this repo (same BigQuery project) — it computes lifetime per-ad: spend, trial_starts, CPFT, est_conversions (initial purchases + trial starts × Meta-channel trial-convert-rate), LTV (est_conversions × cohort_ltv month_index 35), CAC, and LTV/CAC. Collapse multi-ID rows by summing components before ratios. Leave a field empty (do not write 0) when its denominator is 0 — typical for awareness-campaign ads.
+CPFT and LTV/CAC must be filled for every live row where the denominators are real, even when the ad has no SP score yet. Run the LTV/CAC query stored at `automation/ltv_cac.sql` in this repo (same BigQuery project) — it computes lifetime per-ad: spend, trial_starts, CPFT, est_conversions (initial purchases + trial starts × Meta-channel trial-convert-rate), LTV (est_conversions × cohort_ltv month_index 35), CAC, and LTV/CAC. It is MARKET-AWARE: each ad is scored in its dominant delivery market (Taiwan or Hong Kong — 18 of the live rows are HK ads), and the cohort_ltv market label for HK is 'Hong Kong / Macau' (plain 'Hong Kong' silently returns zero rows — never "fix" that mapping). The query pre-suppresses cpft/ltv_cac to NULL for awareness-dominant ads, zero trials, or est_conversions < 1 — write only non-NULL values, never 0. Collapse multi-ID rows by summing components before ratios.
 
 ## STEP 4 — Write metrics back (only what changed)
 
