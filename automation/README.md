@@ -16,7 +16,7 @@ End-to-end automation for the TW creative pipeline: idea intake → production �
 |---|---|---|---|
 | Creative Ideas Sync to Notion | `trig_01CtXgi8zb5PzTXAMPzaAdwr` | Wed 17:00 | (pre-existing) Slack #tw-creative → Ideas board |
 | TW Creative pipeline sync | `trig_011EhN2rJaHcNoAKHPAY8it3` | Daily 09:00 & 15:00 | Ideas (Status=In progress) → Roadmap rows (Plan); Roadmap (Ready-to-Test+) → Ideas marked Done; Ready-to-Test Slack ping tagging Kevin; design-done hints |
-| TW Creative Roadmap nightly sync | `trig_01EZ44tzBdZfTfJy1scvf128` | Daily 10:00 | Meta live ads + BigQuery SP scores → Roadmap (SP score/status, CPFT, spend, Last synced); creates rows for unknown live ads; pause detection + owner pings; Hit-ad → #hit-ads-library; watch flags; archive hygiene |
+| TW Creative Roadmap nightly sync | `trig_01EZ44tzBdZfTfJy1scvf128` | Daily 10:00 | Meta live ads + BigQuery SP scores → Roadmap (SP score/status, CPFT, spend, Last synced); creates rows for unknown live ads; pause detection + owner pings; Hit-ad → #hit-ads-library; watch flags; archive hygiene; #tw-ads 關閉串串 replies (Mon list / Tue–Sat status / Sun missed-closure sweep) |
 | TW winning creative iteration analyst | `trig_01JqGLRu34KTW38yFpWNpDDt` | Mon 10:30 | Hit Ad / P2 Loser rows → Motion analysis → iteration brief → "Winning Iteration" idea in Ideas board (cap 5/week) |
 
 Routine prompts (the source of truth for what each fired session does) are in [`routines/`](routines/). To change a routine's behavior, edit the runbook file here, push, and the next fire picks it up (the trigger prompt tells the session to execute the runbook from this branch).
@@ -68,7 +68,8 @@ Not materialized anywhere — replicated from the Hex "[TW] Meta Ads SP Dashboar
 - **LTV/CAC + CPFT**: filled for every live row with real denominators (even without an SP score), from `ltv_cac.sql` — fatigue-report methodology (est_conversions × cohort LTV month 35). `Last synced` is stamped on every write.
 - **Sample rows**: the ~99 rows dated pre-2026-08-16 with fake ad IDs (`S55`, `UGC9`, …) are ignored by every routine.
 - **Dedupe markers**: Ready-to-Test pings leave an `rt-ping-sent` Notion comment; pause-reason nags leave `pause-ping-sent`. Iteration ideas dedupe on `Ad id`/`Ref`.
-- Routines only write to Notion and Slack. Nothing ever writes to Meta or BigQuery.
+- Routines only write to Notion and Slack. Nothing ever writes to Meta or BigQuery. The 關閉串串 step is explicitly verify-only: a human pauses ads in Meta; the routine reconciles the Ads Tracking calendar with the Influencer Licenses DB, checks actual Meta status, and reports in-thread.
+- The 關閉串串 step needs the **Google Calendar connector** in the persistent automation session (calendar id `c_b529f68a…@group.calendar.google.com`). If it's missing there, the step degrades to license-DB-only and says so.
 - Slack reports go to #tw-creative (`C0ASFA5F1B3`); silent when nothing changed. Paid marketer: Kevin Mo (`U0A1E7WENQ6`).
 
 ## Where to intervene
@@ -81,5 +82,6 @@ Not materialized anywhere — replicated from the Hex "[TW] Meta Ads SP Dashboar
 ## Known limitations (v1)
 
 - Watch-flag CPFT trend compares against yesterday's stored CPFT, not a true trailing average.
+- 關閉串串 sources overlap but neither is complete: legacy ads (e.g. 2026-08-17's 哈利說 / howhow / austin chou closures) exist only on the calendar with no license rows, while new licenses may not be on the calendar. The step flags both directions instead of picking a winner; convergence is manual for now.
 - Brand/awareness campaigns (Reach/Thruplay/Traffic) have no meaningful SP; their rows stay "Testing".
 - Ads renamed in Meta after launch still match by ad ID, but the row name will drift from the Meta name until someone updates it.

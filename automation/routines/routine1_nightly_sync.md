@@ -235,7 +235,31 @@ For live rows (`On Air`/`Scale`) whose `Relation to Influencer Licenses` is non-
 3. **Expiry early-warning.** If a live row's `License days left` rollup is ≤ 3 (fetch per page; the rollup is not SQL-queryable), add a line to the Slack report under `*⚠️ License expiring*` with the row name, days left, and license end day — so Kevin can pause or renew BEFORE Meta runs an unlicensed ad.
 4. Pause reason prefill for `License Expired` (Step 6) uses this same rollup — a paused influencer ad with days left ≤ 0 explains itself.
 
-## STEP 7 — Watch flags
+## STEP 6c — #tw-ads 廣告關閉串串 (weekly list, daily status, Sunday sweep)
+
+Every Monday the "Influencer Ad Tracking" bot posts a `[本週廣告關閉串串]` thread in #tw-ads (`C085DFM380K`) asking Kevin to list the influencer ads to close that week and update closure status daily. This step does that on his behalf. **Verify-only guardrail: this step NEVER pauses, edits, or writes anything in Meta — a human closes the ads; the routine builds the list, checks reality, and reports.** All thread replies are plain factual reporting posted as Kevin (the connected Slack account); write them in his register: 繁體中文, short lines, numbered lists, `～` on routine notes.
+
+**Sources (two, reconciled — neither is trusted alone):**
+
+- **Ads Tracking Google Calendar** — calendar id `c_b529f68a04522d80ee2ac078665f790f6da611589445c5253965b01116a43aed@group.calendar.google.com` (Google Calendar MCP, `list_events` with `calendarId`). Closure events are all-day events whose title contains `關閉` (e.g. `關閉哈利說六月份廣告`). Close date = the event date. If the Calendar tools are unavailable in this session, fall back to the license DB alone and say so in the reply — do not silently skip the step.
+- **Influencer Licenses DB** — `collection://bf9dd8a5-0331-47a3-9d04-9c15bea80071`. Close date = `Launch date` + `License periods` days (skip licenses with an empty Launch date — not yet live). Follow the license's roadmap relation(s) to get `Meta ad ID(s)`.
+
+Union the two by creator (match the creator token in the calendar title against license `Name`/`SNS Account`/`Tracking ID`). Items found in only one source are still included, flagged: calendar-only → `⚠️ 無授權紀錄` (no license row — usually a legacy ad), DB-only → `⚠️ 未在關閉行事曆上`. Never silently drop a mismatch — the flags are how the two systems converge over time.
+
+**Ad-ID mapping per item:** license → roadmap relation → `Meta ad ID(s)`. For calendar-only items, fuzzy-match the creator token against live roadmap rows' `Name`/`Ad Name`. If no confident match, the item's status is `❓ 請人工確認` — never guess an ad ID.
+
+**By weekday (Taipei):**
+
+1. **Monday — weekly list.** Find the newest `本週廣告關閉串串` parent posted by the Influencer Ad Tracking bot within the last 2 days (`slack_read_channel`, then `slack_read_thread`). If the thread already contains a reply with the marker `本週應關閉` (from Kevin or a previous run), skip — never double-post. Otherwise reply in-thread with the week's closure list: numbered, one line each — `MM/DD（weekday）關閉 {creator} {ad description}` — mismatch flags appended, closing line `關閉後會每日在這串更新狀況！`. The week = Monday through Sunday of the parent's post date.
+2. **Tuesday–Saturday — daily status.** On the current week's thread (parent ≤ 6 days old), post one status reply per day (dedupe: skip if this routine already posted a status reply today — check message dates in the thread). Status per item, using the Step 2 Meta pull (apply Step 6's individual-verification rule before declaring anything closed):
+   - every mapped ad ID non-ACTIVE → `✅ 已關閉`
+   - close date today or future, still ACTIVE → `⏳ 待關閉（MM/DD）`
+   - close date past, still ACTIVE → `🚨 逾期未關` — tag `<@U0A1E7WENQ6>` (license risk)
+   - no mapped ad ID → `❓ 請人工確認`
+   Once every item is `✅` verified closed, post a final `✅ 本週全數關閉` line and stop updating that thread for the week.
+3. **Sunday — backup sweep (missed-closure scan).** Ignore the weekly window. Recompute close dates from BOTH sources for every item with close date ≤ today (look back 60 days), map to ad IDs, and check against the full Step 2 Meta pull. Any ad past its close date and still ACTIVE — including ones that never appeared on any weekly list — goes into a `🚨 漏關掃描` reply on the current thread (or, if the thread is gone, a fresh message in `C085DFM380K`) tagging `<@U0A1E7WENQ6>`. If the sweep finds nothing, post nothing.
+
+Confirmed closures feed Step 6 as usual — pause detection stamps the roadmap row `Pause` with reason `License Expired` when the license rollup explains it.
 
 For rows that are still live (`On Air`/`Scale`):
 
