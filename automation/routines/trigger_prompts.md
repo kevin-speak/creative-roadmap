@@ -12,27 +12,42 @@ confirm connectors are attached before enabling a routine.
 
 ## Cutover from the session-bound routines (2026-09-03)
 
-Fresh-session triggers created from inside a session **cannot carry MCP connector grants** for
-this organization (`create_trigger` rejects the `connectors` parameter, and the trigger is
-stored with `mcp_connections: []`). Connectors have to be attached from the web UI:
+**Finding (verified 2026-09-03 14:30 UTC): a fresh-session routine must be created from the
+claude.ai Routines UI, not from inside a session.** Two things go wrong with agent-created
+("agent-minted") fresh-session triggers:
 
-1. Open [claude.ai/code/routines](https://claude.ai/code/routines) and click the new routine
-   (IDs below). Click the pencil icon (**Edit routine**).
-2. Under **Connectors**, add the connectors listed for that routine, then save.
-3. Click **Run now**, type `DRY RUN` in the text box, and confirm the run reports every
-   connector as reachable.
-4. Flip the **Repeats** toggle on for the new routine and off for the old session-bound one
-   (or use `update_trigger` with `enabled`). Delete the old routine once the first real run
-   looks right.
+1. They cannot carry MCP connector grants (`create_trigger` rejects `connectors` for this org).
+   Connectors *can* be attached afterwards in the UI, and that part works — the fired session
+   does get `mcp__Notion__*`, `mcp__Slack__*` etc.
+2. They spawn sessions in **`auto` permission mode**, inherited from the creating session. The
+   auto-mode classifier prompts on the very first connector call (Notion query, Slack read), the
+   session goes to *Requires action*, and nothing happens until a human approves. The repo's
+   `.claude/settings.json` allow rule for `mcp__Notion` did not prevent the prompt. All three
+   agent-minted triggers below blocked this way on their first run (`cse_019KvnYMazJgmtvo8c1DKNev`,
+   `cse_015P8nDEjKqGu9P6dQpqKGhk`, `cse_0177F5PqBsaWxF3EUioMJwK3`).
 
-| Routine | New fresh-session trigger | Old session-bound trigger | Connectors to attach |
-|---|---|---|---|
-| TW Creative Roadmap nightly sync | `trig_01Mu2vcfPW9zXbT9N1s9nXn8` | `trig_01EZ44tzBdZfTfJy1scvf128` | Notion, Slack, Meta-Ads, BigQuery, Hex |
-| TW Creative pipeline sync | `trig_01Bz5iWJZ9cBkXjhd2YeCaF4` | `trig_011EhN2rJaHcNoAKHPAY8it3` | Notion, Slack |
-| TW winning creative iteration analyst | `trig_01NJznSip628rN38F1f1jHAL` | `trig_01JqGLRu34KTW38yFpWNpDDt` | Notion, Slack, Motion-Creative-Analytics, Meta-Ads |
+Routines created from the UI (e.g. `trig_011MDYDACzKDPSHu2c9TgjRQ` Daily Ad Fatigue Report) run
+their sessions with **no permission mode** — no prompts — and complete unattended. The old
+session-bound routines have the same `auto`-mode problem: `session_014szRHcYSqZhSCd695DuyA9` was
+blocked on a Notion update at the time of writing (permission sequence > 1200, i.e. it has been
+approved by hand many times).
 
-Schedules are unchanged (UTC cron): nightly sync `0 2 * * *`, pipeline sync `0 1,7 * * *`,
-iteration analyst `30 2 * * 1`.
+### Procedure
+
+1. Open [claude.ai/code/routines](https://claude.ai/code/routines) → **New routine**.
+2. Name it exactly as below, paste the prompt from the matching section, select repo
+   `kevin-speak/creative-roadmap`, environment **Default** (`env_014JKSnQ2MMQ38n6RhYjiA6m`),
+   the schedule, and keep only the connectors listed.
+3. **Run now** with text `DRY RUN` and confirm the run reports every connector reachable with no
+   *Requires action* stop.
+4. Enable it, then disable (later delete) both the agent-minted trigger and the old
+   session-bound trigger for that routine.
+
+| Routine | Schedule (Taipei) | Connectors | Agent-minted trigger (paused, delete) | Old session-bound trigger (still running) |
+|---|---|---|---|---|
+| TW Creative Roadmap nightly sync | daily 22:00 (`0 14 * * *` UTC, as set in the UI on 2026-09-03; original was 10:00 / `0 2 * * *`) | Notion, Slack, Meta-Ads, BigQuery, Hex | `trig_01Mu2vcfPW9zXbT9N1s9nXn8` | `trig_01EZ44tzBdZfTfJy1scvf128` |
+| TW Creative pipeline sync | daily 07:00 (`0 23 * * *` UTC, as set in the UI; original was 09:00 & 15:00 / `0 1,7 * * *`) | Notion, Slack | `trig_01Bz5iWJZ9cBkXjhd2YeCaF4` | `trig_011EhN2rJaHcNoAKHPAY8it3` |
+| TW winning creative iteration analyst | Mon 10:30 (`30 2 * * 1` UTC) | Notion, Slack, Motion-Creative-Analytics, Meta-Ads | `trig_01NJznSip628rN38F1f1jHAL` | `trig_01JqGLRu34KTW38yFpWNpDDt` |
 
 ## 1. TW Creative Roadmap nightly sync
 
