@@ -1,0 +1,13 @@
+# Secrets — never commit Meta tokens
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Local outputs
+meta_api/out/
