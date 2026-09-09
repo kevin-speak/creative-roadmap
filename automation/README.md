@@ -101,6 +101,10 @@ Not materialized anywhere — replicated from the Hex "[TW] Meta Ads SP Dashboar
 - Routines only write to Notion and Slack. Nothing ever writes to Meta or BigQuery (also enforced by `.claude/settings.json`).
 - Slack reports go to #tw-creative (`C0ASFA5F1B3`); silent when nothing changed. Paid marketer: Kevin Mo (`U0A1E7WENQ6`).
 
+## Direct Meta API (MCP-independent)
+
+[`../meta_api/`](../meta_api/README.md) holds a read-only Marketing API client for Speak ZH plus a step-by-step guide (app → System User token → `.env` → `check_setup.py`). `fetch_ads.py` reproduces the nightly sync's STEP 2 pull (ads + lifetime/7-day spend) without the Meta Ads MCP, so a routine can run it in any session that has the `META_*` variables. Tokens live only in the git-ignored `meta_api/.env`.
+
 ## Where to intervene
 
 - **Prioritize ideas**: set Ideas Status = In progress (that's the promotion trigger). `Pending` does nothing.
