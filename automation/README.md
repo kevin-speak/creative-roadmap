@@ -33,7 +33,7 @@ Routine prompts (the source of truth for what each fired session does) are in [`
 
 **Switching to set B:** a *scheduled* fire is the only valid test. Two `fire_trigger` DRY RUNs on 2026-09-09 ended idle within a minute and never reached Notion/Slack: sessions started by `fire_trigger` from an agent session get **no connector tools** at all, whereas the scheduled fire on 2026-09-03 did have them (it stalled on a Meta permission prompt, which is a different problem). So: the set-B nightly trigger is enabled alongside set A for its 22:00 Taipei scheduled fire; if that session ends idle and posts the 🌙 report to #tw-creative, enable the other two set-B triggers and disable set A. If it ends in *requires action* (permission prompt), the auto-mode classifier still blocks connector tools in fresh sessions — keep set A and approve its prompts in the app, and consider re-creating set B from the Routines UI (UI-created Routines are documented to run connector tools without prompting).
 
-**Permissions:** [`.claude/settings.json`](../.claude/settings.json) pre-allows the Notion, Slack, Motion, read-only BigQuery and read-only Meta tools and *denies* Meta writes and non-read-only BigQuery, so any session that starts from this repo can only ever write to Notion and Slack. Project settings are read at session start from the cloned default branch.
+**Permissions:** [`.claude/settings.json`](../.claude/settings.json) pre-allows every Notion tool (reads and writes — `notion-update-page`, `notion-create-pages`, `notion-create-comment` are listed explicitly so the auto-mode classifier never has to judge them), all Slack and Motion tools, read-only BigQuery and read-only Meta tools, and *denies* Meta writes and non-read-only BigQuery. Any session that starts from this repo can therefore only ever write to Notion and Slack, and never waits on a prompt for a Notion write. Project settings are read at session start from the cloned default branch, so this only takes effect once the file is on `claude/speak-tw-creative-automation-1w6h9d`; the persistent session (set A) loaded its settings when it was created on 2026-08-16 and needs a fresh start (or an "always allow" on its next Notion prompt) to pick them up.
 
 ## The lifecycle
 
@@ -53,8 +53,11 @@ Slack idea → Ideas board (Not started)
       1.5 ≤ SP < 2.0                         → Mid-tier
       SP < 1.5                               → Pause (SP status) + Pause-candidate flag
   → ad paused in Meta → row → Pause, Paused date stamped,
-    Pause reason prefilled when knowable (License Expired / SP Threshold /
-    Graduate (Winning) / Campaign End), otherwise one batched owner ping
+    Pause reason prefilled when knowable, in this order:
+      License Expired · Budget Capped (testing campaign, $140–300 lifetime, <10 installs)
+      · SP Threshold · Graduate (Winning) · Fatigue (scaling/winning campaigns only,
+      CPFT decaying) · Campaign End (campaign switched off; humans also use it for
+      promo-season end) — otherwise one batched owner ping
   → ad ACTIVE and spending again → row → On Air (relaunch detected, comment left)
   → 14 days paused with reason filled → Archive (≤ 40 per night)
   → weekly: P2 Hit Ads & P2 Losers (live first) get a Motion-informed iteration brief

@@ -25,7 +25,10 @@ This runbook is written so that an interrupted run still leaves the board consis
 **Option lists (exact strings — never invent an option; if none fits, leave the field empty and say so in the report):**
 - `Production Status`: Plan · Production · Ready-to-Test · On Air · Pause · Archive. (There is no "Scale" any more.)
 - `SP status`: Testing · Pause · Mid-tier · P1 Winner · P2 Loser · P2 Hit Ad. (Renamed 2026-08-21: old `Winner` → `P1 Winner`, old `Hit Ad` → `P2 Hit Ad`.)
-- `Pause reason`: Budget Capped · SP Threshold · License Expired · Graduate (Winning) · Fatigue · Campaign End · Other.
+- `Pause reason`: Budget Capped · SP Threshold · License Expired · Graduate (Winning) · Fatigue · Campaign End · Other. Meanings that matter for prefill:
+  - `Budget Capped` — testing-campaign ads run under a $150 daily cap checked once a day and only get more budget after 10 installs. An ad that stopped with lifetime spend in the cap band and < 10 installs (or no SP data) was capped, not judged.
+  - `Fatigue` — applies **only** to ads in winning / scaling campaigns (`campaign_stage` = `scaling`). Never write it for a testing-campaign ad.
+  - `Campaign End` — two meanings: the promotional campaign *season* ended (e.g. 26Q3 promo window), or a campaign object was switched off in Meta and took every ad with it. The prefill rule detects the second; both are correct uses of the option.
 - `Watch flag`: None · Watch List · Pause-candidate.
 - `Market`: `TW 🇹🇼` · `HK 🇭🇰` (map BigQuery `market` Taiwan → `TW 🇹🇼`, Hong Kong → `HK 🇭🇰`).
 
@@ -77,9 +80,9 @@ The account holds ~2,900 ads; only ~60 are ACTIVE. Do not page through everythin
 Read `automation/sp_score.sql` and `automation/ltv_cac.sql` from this repo and run each once with `execute_sql_readonly` against project `speak-v2-2a1f1`. Do not edit, "modernize" or re-anchor them to `CURRENT_DATE()`; every date inside is derived from `MAX(date)` because the funnel table lags ~2 days. Do not paste the SQL into your summary.
 
 - `sp_score.sql` returns one row per (ad_id, country, os) for **Taiwan and Hong Kong**. Collapse to one row per ad_id: best (highest) `sp_score`, summed `trial_starts_total` and `spend_total`, `cpft` recomputed as summed spend / summed trials (NULL when trials = 0). `phase2_result` is populated for Taiwan only (no HK CPFT threshold yet).
-- `ltv_cac.sql` returns exactly one row per ad_id with `market`, `launch_date`, `cpft`, `ltv_cac`, `spend_7d`, `trial_starts_7d`, `cpft_7d`. It is market-aware (TW vs HK, cohort LTV month 35) and pre-suppresses `cpft` / `ltv_cac` to NULL for awareness-dominant ads, zero trials, or < 1 estimated conversion. Never "fix" the `'Hong Kong / Macau'` mapping inside it.
+- `ltv_cac.sql` returns exactly one row per ad_id with `market`, `launch_date`, `cpft`, `ltv_cac`, `spend_7d`, `trial_starts_7d`, `cpft_7d`, plus `activity_total` (lifetime installs, or checkouts for web ads — the SP "10-install" activity), `dominant_campaign_name` and `campaign_stage` (`testing` / `scaling` / `other`, from the campaign the ad spent most in). It is market-aware (TW vs HK, cohort LTV month 35) and pre-suppresses `cpft` / `ltv_cac` to NULL for awareness-dominant ads, zero trials, or < 1 estimated conversion. Never "fix" the `'Hong Kong / Macau'` mapping inside it.
 
-For rows with several ad IDs, sum spend / trials / spend_7d / trial_starts_7d across IDs before computing ratios, and take the best SP.
+For rows with several ad IDs, sum spend / trials / activity / spend_7d / trial_starts_7d across IDs before computing ratios, take the best SP, and take `campaign_stage` from the highest-spend ID.
 
 ## STEP 4 — Compute the target state for every row in REFRESH SCOPE
 
@@ -106,10 +109,14 @@ For rows with several ad IDs, sum spend / trials / spend_7d / trial_starts_7d ac
 
 **a. Pause detection.** A row currently `On Air` whose **every** listed ad ID is non-ACTIVE or not found in Step 2b → `Production Status` = `Pause`, `date:Paused date:start` = today. If some IDs are still ACTIVE, do nothing. Prefill `Pause reason` only when confident, in this order:
 1. `License Expired` — the row has a `Relation to Influencer Licenses`; `notion-fetch` the row and read the `License days left` rollup; use this if ≤ 0.
-2. `SP Threshold` — the freshly computed SP status is `Pause`.
-3. `Graduate (Winning)` — an ACTIVE ad from Step 2a has the same c6 creator segment **and** the same c8 descriptor as this row's `Ad Name`, sits in a campaign whose name contains `scaling`, `winning` or `cpr`, and was created within the last 14 days (the test version was promoted).
-4. `Campaign End` — five or more rows are being paused in this run **and** every ad of this row's `campaign_id` is now non-ACTIVE (the campaign was switched off). Apply to all rows of that campaign; do not ping owners for them.
-5. Otherwise leave `Pause reason` empty and add the row to the "needs reason" list (one batched ping in Step 5.5, marked with a `pause-ping-sent <YYYY-MM-DD>` comment on each row).
+2. `Budget Capped` — `campaign_stage` = `testing`, lifetime `spend_total` between $140 and $300 (the $150 daily cap, checked once a day, usually stops between $145 and $275), **and** (`activity_total` < 10 **or** no `sp_score`). The ad never cleared the 10-install gate, so it was capped rather than judged.
+3. `SP Threshold` — the freshly computed SP status is `Pause`.
+4. `Graduate (Winning)` — an ACTIVE ad from Step 2a has the same c6 creator segment **and** the same c8 descriptor as this row's `Ad Name`, sits in a campaign whose name contains `scaling`, `winning` or `cpr`, and was created within the last 14 days (the test version was promoted).
+5. `Fatigue` — only when `campaign_stage` = `scaling` (winning / scaling / cpr campaigns) **and** the ad was already showing decay: the row's `Watch flag` was `Watch List`, or `trial_starts_7d` ≥ 5 with `cpft_7d` > 1.3 × lifetime `cpft`. Never for testing-campaign ads, whatever their numbers look like.
+6. `Campaign End` — five or more rows are being paused in this run **and** every ad of this row's `campaign_id` is now non-ACTIVE (the campaign was switched off). Apply to all rows of that campaign; do not ping owners for them. (Humans also use this option when a promotional season ends — treat an existing `Campaign End` as final.)
+7. Otherwise leave `Pause reason` empty and add the row to the "needs reason" list (one batched ping in Step 5.5, marked with a `pause-ping-sent <YYYY-MM-DD>` comment on each row).
+
+When you prefill a reason, mention it in the report's *Paused* section with the evidence in parentheses, e.g. `Budget Capped ($209 lifetime, 5 installs, testing campaign)`, so a wrong prefill is easy to spot and override.
 
 **b. Went live / relaunch merged / new rows** from Step 2c.
 
@@ -150,7 +157,7 @@ Meta ACTIVE: X · tracked rows refreshed: X · new rows: X · archived: X
 • <Name>: Pause → On Air (relaunch, $<7d spend>)
 
 *Paused*
-• <Name>: On Air → Pause (<reason or "needs owner input">)
+• <Name>: On Air → Pause (<reason + evidence, or "needs owner input">)
 • <campaign name>: X rows → Campaign End
 
 *SP changes*

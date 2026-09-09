@@ -66,6 +66,15 @@
 --      > 30% worse AND trial_starts_7d >= 5) instead of against yesterday's stored value.
 --      spend_7d > 0 also tells the sync an ad is genuinely delivering (relaunch detection).
 --
+--   8. (added 2026-09-09) CAMPAIGN STAGE + ACTIVITY for Pause-reason prefill:
+--      dominant_campaign_name = the campaign where the ad spent the most;
+--      campaign_stage = 'testing' when that name contains "testing", 'scaling' when it
+--      contains "scaling" / "winning" / "cpr", else 'other';
+--      activity_total = lifetime installs (app os) or checkouts_initiated (web) — the same
+--      "10-install" activity the SP baseline uses. The nightly sync prefills
+--      `Budget Capped` for testing-stage ads that stopped at the $150 daily cap with
+--      < 10 activity, and only allows `Fatigue` for scaling-stage ads.
+--
 -- SUPPRESSION -- the consumer must leave the Notion field EMPTY (never write 0) when:
 --      cpft    IS NULL  -> trial_starts = 0
 --      ltv_cac IS NULL  -> est_conversions < 1 (less than one estimated conversion)
@@ -96,7 +105,8 @@ funnel AS (
     SELECT f.ad_id, f.campaign_id, f.campaign_name, f.ad_name, f.date, f.os,
            f.country, m.ltv_market,
            f.spend, f.trial_starts, f.adj_trial_starts,
-           f.initial_purchases, f.adj_initial_purchases
+           f.initial_purchases, f.adj_initial_purchases,
+           f.installs, f.checkouts_initiated
     FROM `speak-v2-2a1f1.analytics.meta_ads_creative_report_funnel` f
     JOIN market_map m ON m.funnel_country = f.country
     WHERE f.date >= DATE '2025-01-01'
@@ -132,6 +142,8 @@ ad_lifetime AS (
         SUM(adj_trial_starts)       AS adj_trial_starts_total,
         SUM(initial_purchases)      AS initial_purchases_total,
         SUM(adj_initial_purchases)  AS adj_initial_purchases_total,
+        -- SP-baseline activity: installs for app delivery, checkouts for web delivery
+        SUM(CASE WHEN os = 'web' THEN checkouts_initiated ELSE installs END) AS activity_total,
         -- share of spend in awareness-objective campaigns (Reach / Thruplay / Traffic /
         -- brand-awareness)
         SAFE_DIVIDE(
@@ -140,6 +152,22 @@ ad_lifetime AS (
             NULLIF(SUM(spend), 0))  AS awareness_spend_share
     FROM scoped
     GROUP BY ad_id
+),
+
+-- The campaign where the ad spent the most, and its lifecycle stage
+ad_dominant_campaign AS (
+    SELECT ad_id, campaign_name AS dominant_campaign_name,
+        CASE
+            WHEN REGEXP_CONTAINS(LOWER(campaign_name), r'testing')              THEN 'testing'
+            WHEN REGEXP_CONTAINS(LOWER(campaign_name), r'scaling|winning|cpr')  THEN 'scaling'
+            ELSE 'other'
+        END AS campaign_stage
+    FROM (
+        SELECT ad_id, campaign_name, SUM(spend) AS spend
+        FROM scoped
+        GROUP BY ad_id, campaign_name
+    )
+    QUALIFY ROW_NUMBER() OVER (PARTITION BY ad_id ORDER BY spend DESC, campaign_name) = 1
 ),
 
 -- Trailing 7 funnel days ending at MAX(date), in the ad's own market
@@ -224,6 +252,9 @@ calc AS (
         l.spend_total,
         l.trial_starts_total,
         l.initial_purchases_total,
+        l.activity_total,
+        c.dominant_campaign_name,
+        c.campaign_stage,
         COALESCE(w.spend_7d, 0)        AS spend_7d,
         COALESCE(w.trial_starts_7d, 0) AS trial_starts_7d,
         r.convert_rate,
@@ -231,6 +262,7 @@ calc AS (
         l.adj_initial_purchases_total + l.adj_trial_starts_total * r.convert_rate
             AS est_conversions
     FROM ad_lifetime l
+    LEFT JOIN ad_dominant_campaign c ON c.ad_id = l.ad_id
     LEFT JOIN ad_last7 w ON w.ad_id = l.ad_id
     LEFT JOIN ad_convert_rate r ON r.ad_id = l.ad_id
     LEFT JOIN ltv_by_month m
@@ -251,6 +283,9 @@ SELECT
     ROUND(spend_total, 2)                                   AS spend_total,
     trial_starts_total,
     initial_purchases_total,
+    activity_total,
+    dominant_campaign_name,
+    campaign_stage,
     ROUND(convert_rate, 4)                                  AS trial_convert_rate,
     ROUND(ltv_per_user, 2)                                  AS ltv_per_user,
     ROUND(est_conversions, 3)                               AS est_conversions,

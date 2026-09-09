@@ -3,6 +3,12 @@
     "allow": [
       "mcp__Notion",
       "mcp__Notion__*",
+      "mcp__Notion__notion-update-page",
+      "mcp__Notion__notion-create-pages",
+      "mcp__Notion__notion-create-comment",
+      "mcp__Notion__notion-update-data-source",
+      "mcp__Notion__notion-move-pages",
+      "mcp__Notion__notion-duplicate-page",
       "mcp__Slack",
       "mcp__Slack__*",
       "mcp__BigQuery__execute_sql_readonly",
