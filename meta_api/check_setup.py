@@ -48,8 +48,12 @@ def main() -> int:
         _ok("token", f"authenticated as {me.get('name')} (id {me.get('id')})")
     except MetaAPIError as exc:
         _fail("token", str(exc))
-        print("\n  A 190 error means the token is invalid or expired. Regenerate it in Business Manager"
-              " → System Users → Generate token.")
+        if "ProxyError" in str(exc) or "Tunnel connection failed" in str(exc) or "Max retries exceeded" in str(exc):
+            print("\n  This is a network failure, not a token problem: graph.facebook.com is unreachable from"
+                  " this machine (a sandbox network policy usually). Run the check locally or allow the host.")
+        elif exc.code == 190:
+            print("\n  Error 190 means the token is invalid or expired. Regenerate it in Business Manager"
+                  " → System Users → Generate token.")
         return 1
 
     # 3. Token scopes / expiry (optional, needs app id + secret)
