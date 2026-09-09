@@ -1,275 +1,174 @@
-Reconcile the Notion TW Creative Roadmap against live Meta ads and BigQuery SP scores every night, and report the deltas to #tw-creative.
+Reconcile the Notion TW Creative Roadmap against live Meta ads and BigQuery every night, write the deltas back in priority order, and report to #tw-creative.
+
+This runbook is written so that an interrupted run still leaves the board consistent: status transitions are written first, metrics second, hygiene last. Keep the number of tool calls small — the previous version of this routine died repeatedly in the middle of refreshing ~130 rows.
 
 ## Setup — exact IDs
 
-- Notion Roadmap data source: `collection://46a9a0c5-2240-4576-8574-ce81793d224b` ("(WIP) TW Creative Roadmap")
-- Meta ad account: Speak ZH, ID `1148917790153640` (Meta MCP — load with ToolSearch, use `ads_get_ad_entities`)
-- BigQuery project: `speak-v2-2a1f1` (use `mcp__BigQuery__execute_sql_readonly`)
+- Notion Roadmap data source: `collection://46a9a0c5-2240-4576-8574-ce81793d224b` (database title "🧪 (Beta) TW Creative Roadmap")
+- Notion Influencer Licenses data source: `collection://bf9dd8a5-0331-47a3-9d04-9c15bea80071`
+- Meta ad account: Speak ZH, ID `1148917790153640` (Meta Ads MCP, `ads_get_ad_entities`; generate one 20-character `client_conversation_id` and reuse it for every Meta call in the run)
+- BigQuery project: `speak-v2-2a1f1` (use `execute_sql_readonly` only)
 - Slack channel #tw-creative = `C0ASFA5F1B3`. Paid marketer fallback tag: Kevin Mo `<@U0A1E7WENQ6>`
-- Notion tools: `notion-query-data-sources` (SQL mode), `notion-fetch`, `notion-update-page`, `notion-create-pages`, `notion-get-comments`, `notion-create-comment`
+- Notion tools: `notion-query-data-sources` (SQL mode), `notion-fetch`, `notion-update-page`, `notion-create-pages`, `notion-get-comments`, `notion-create-comment`, `notion-get-users`
+- Load MCP tools with ToolSearch before first use.
 
-**SAMPLE-ROW GUARD (read first, applies to every step).** ~99 rows in the roadmap are seeded sample data — they sit in Production Status Pause/Archive and carry fake ad IDs like `S55`. Never update, archive, comment on, or report them. A row is *real* only if at least one comma-separated token in `Meta ad ID(s)` matches `^[0-9]{15,}$` (a 15+ digit pure-numeric Meta ad ID), OR the row has no ad ID yet but is in an active status (Plan / Production / Ready-to-Test / On Air / Scale) **and** was created after 2026-08-16. Everything else is off-limits. Apply the regex per token, not to the whole cell.
+## Definitions (read first, they apply to every step)
 
-**Checkbox convention:** Notion checkboxes read/write as the strings `"__YES__"` (checked) and `"__NO__"` (unchecked).
-**Date convention:** date properties are written through expanded properties — `date:Last synced:start`, `date:Launch date:start`, `date:Paused date:start` — as ISO `YYYY-MM-DD`.
+**TRACKED ROW.** A roadmap row is tracked by this routine only if at least one comma-separated token in `Meta ad ID(s)` matches `^[0-9]{15,}$` (apply the regex per token, not to the whole cell). Rows without a real ad ID belong to the pipeline routine (Plan / Production / Ready-to-Test work items) — this routine never edits them, with one exception: Step 2c may write the first ad ID onto a Ready-to-Test / On Air row whose `Ad Name` matches a newly-live Meta ad.
 
-**JOIN KEY (changed 2026-08-16):** the roadmap `Name` is a clean 繁體中文 display name for humans — it does NOT equal the Meta ad name. Match rows to Meta ads by `Meta ad ID(s)` (primary) and `Ad Name` (secondary; holds the exact Meta ad name). Never overwrite a human-set `Name`.
+**REFRESH SCOPE.** Metric writes (SP score, SP status, CPFT, LTV/CAC, Spend to date, Watch flag, Market, Launch date) go only to tracked rows that are:
+- `Production Status` = `On Air` or `Ready-to-Test`, or
+- `Production Status` = `Pause` **and** (`Paused date` is within the last 14 days **or** `Pause reason` is empty).
 
-**CAMPAIGN SCOPE:** the roadmap tracks current campaigns only (26Q3 brand campaign + ongoing ios trial/purchase testing/scaling/winning). Do NOT create rows for ads in legacy 2025-era campaigns (campaign `TW_Meta_N/A_M3_Q3Reach_brandmarketing` id 120229358097810167, or any campaign whose name marks a 25Qx quarter) — skip them silently even if ACTIVE.
+`Archive` rows and rows paused more than 14 days ago with a reason are frozen — never write metrics to them. They are touched only by the relaunch rule (Step 5.1c) and the archive rule (Step 5.4).
 
-## STEP 1 — Pull the roadmap
+**Option lists (exact strings — never invent an option; if none fits, leave the field empty and say so in the report):**
+- `Production Status`: Plan · Production · Ready-to-Test · On Air · Pause · Archive. (There is no "Scale" any more.)
+- `SP status`: Testing · Pause · Mid-tier · P1 Winner · P2 Loser · P2 Hit Ad. (Renamed 2026-08-21: old `Winner` → `P1 Winner`, old `Hit Ad` → `P2 Hit Ad`.)
+- `Pause reason`: Budget Capped · SP Threshold · License Expired · Graduate (Winning) · Fatigue · Campaign End · Other. Meanings that matter for prefill:
+  - `Budget Capped` — testing-campaign ads run under a $150 daily cap checked once a day and only get more budget after 10 installs. An ad that stopped with lifetime spend in the cap band and < 10 installs (or no SP data) was capped, not judged.
+  - `Fatigue` — applies **only** to ads in winning / scaling campaigns (`campaign_stage` = `scaling`). Never write it for a testing-campaign ad.
+  - `Campaign End` — two meanings: the promotional campaign *season* ended (e.g. 26Q3 promo window), or a campaign object was switched off in Meta and took every ad with it. The prefill rule detects the second; both are correct uses of the option.
+- `Watch flag`: None · Watch List · Pause-candidate.
+- `Market`: `TW 🇹🇼` · `HK 🇭🇰` (map BigQuery `market` Taiwan → `TW 🇹🇼`, Hong Kong → `HK 🇭🇰`).
 
-Query the roadmap in SQL mode:
+**Conventions.** Checkboxes are the strings `"__YES__"` / `"__NO__"`. Dates are written through expanded properties (`date:Last synced:start`, `date:Launch date:start`, `date:Paused date:start`) as ISO `YYYY-MM-DD` (Taipei calendar day). Rollups `License days left`, `Influencer Priority`, formulas `Verdict` and `Win flag` are **not** SQL-queryable — `notion-fetch` the page when you need a rollup, and only for the rows that need it.
+
+**JOIN KEY.** Match rows to Meta ads by `Meta ad ID(s)` (primary) and `Ad Name` = exact Meta ad name (secondary). The row `Name` is a clean 繁體中文 display name for humans; never overwrite a human-set `Name`.
+
+**CAMPAIGN SCOPE.** Current campaigns only (26Q3 + ongoing trial/purchase testing/scaling/winning in TW and HK). Do not create rows for ads in legacy 2025-era campaigns (campaign `TW_Meta_N/A_M3_Q3Reach_brandmarketing` id `120229358097810167`, or any campaign whose name marks a 25Qx quarter) — skip them silently even if ACTIVE.
+
+**WRITE DISCIPLINE.** One `notion-update-page` per row, containing only properties whose value actually differs from what Step 1 returned, plus `date:Last synced:start` = today. A row with no differing property is skipped entirely (no write, no Last synced stamp). Never write `0` for CPFT or LTV/CAC — leave the field untouched when the value is NULL.
+
+## STEP 1 — Pull the roadmap (one query)
 
 ```sql
 SELECT url, "Name", "Ad Name", "Meta ad ID(s)", "Production Status", "SP score", "SP status",
-       "CPFT", "Spend to date", "Watch flag", "Hit ad", "Pause reason", "Owner", "Learnings",
+       "CPFT", "LTV/CAC", "Spend to date", "Watch flag", "Hit ad", "Pause reason", "Owner",
+       "Market", "Relation to Influencer Licenses", "Learnings",
        "date:Launch date:start", "date:Paused date:start", "date:Last synced:start", createdTime
 FROM "collection://46a9a0c5-2240-4576-8574-ce81793d224b"
-WHERE "Production Status" IN ('On Air','Scale','Pause','Ready-to-Test')
+WHERE "Production Status" IN ('On Air','Ready-to-Test','Pause')
 ```
 
-Then apply the sample-row guard in memory. Include Ready-to-Test rows — some go live without anyone flipping the status. Keep a map `ad_id -> roadmap row url`, expanding comma-separated `Meta ad ID(s)` into individual keys.
+Apply the TRACKED ROW and REFRESH SCOPE definitions in memory. Build `ad_id -> row` by expanding comma-separated `Meta ad ID(s)`. Also keep the list of Ready-to-Test / On Air rows that have **no** ad ID yet together with their `Ad Name` (for Step 2c matching).
 
-Note: the rollup `License days left` is **not queryable in SQL** (it is in the data source's `notAvailableInQuerySql` list). When you need it (Step 6), `notion-fetch` that individual page and read the rollup from the page properties.
+## STEP 2 — Pull Meta (two targeted calls, never the whole account)
 
-## STEP 2 — Pull live Meta ads and create missing rows
+The account holds ~2,900 ads; only ~60 are ACTIVE. Do not page through everything.
 
-`ads_get_ad_entities` on account `1148917790153640`, ad level, fields: `id, name, effective_status, created_time, spend` — pull twice: `date_preset: maximum` (lifetime spend) and `date_preset: last_7d`. Keep only `effective_status = ACTIVE` for the "live" set, but keep the full result so Step 6 can see paused/archived ads.
+**2a — ACTIVE ads.** `ads_get_ad_entities`, `level: ad`, `filtering: [{"field":"ad.effective_status","operator":"IN","value":["ACTIVE"]}]`, `fields: ["id","name","effective_status","created_time","campaign_id","campaign_name","spend"]`, `date_preset: last_7d`, `limit: 500`. Follow `pagination.next_cursor` until it is absent, resending every parameter unchanged. This is the "live" set; `spend` here is 7-day spend.
 
-For every ACTIVE Meta ad whose `id` is not in the roadmap map (and not in a legacy 25Qx campaign — see CAMPAIGN SCOPE): create a roadmap page in `collection://46a9a0c5-2240-4576-8574-ce81793d224b` with
+**2b — Tracked ads.** `ads_get_ad_entities`, `level: ad`, `object_ids: [every ad ID from Step 1]` (chunk at 1000), `fields: ["id","name","effective_status","spend"]`, `date_preset: maximum`. This returns lifetime spend and current status for every tracked ID in one call — it *is* the per-ID verification, so no extra per-ad calls are needed. An ID missing from the response is "not found" (deleted). If this call errors, retry once; if it still errors, skip pause detection (Step 5.1a) for this run and say so in the report.
 
-- `Name` = a clean 繁體中文 display name generated from the ad-name segments: format `[創作者/類型] - 主題` (e.g. `Camel UGC - 職場英文溝通・AI 主管模擬`, `26Q3 促銷靜圖 - P1 倒數 Day1`, `品牌影片 30 秒`). Translate the c4 angle (painpoint 痛點 / testimonial 見證 / productdemo 產品示範 / speakmethod 學習方法 / valueprop 價值主張 / scenario 情境 / campaign 檔期 / discount 折扣), use the c6 creator handle, and the c8 descriptor in natural zh-TW. Keep unique vs existing names; keep v1/v2 markers when needed; drop pixel sizes. Traditional Chinese only.
-- `Ad Name` = the Meta ad name verbatim (join key — must be exact)
-- `Meta ad ID(s)` = the ad id
-- `Production Status` = `On Air`
-- `Channel` = `["Meta"]`
-- `SP status` = `Testing`
-- `date:Launch date:start` = the ad's `created_time` date (date only, Taipei calendar day)
-- `date:Last synced:start` = today
+**2c — New live ads.** For every ACTIVE ad from 2a whose `id` is not in the Step 1 map and that passes CAMPAIGN SCOPE:
 
-Count these as "new rows created" for the report. Do not guess Category, Format, Source or Owner — leave them empty for a human.
+1. If its `name` equals the `Ad Name` of a Step 1 row that has no ad ID yet (Ready-to-Test / On Air) → write `Meta ad ID(s)` = the id onto that row, set `Production Status` = `On Air`, `date:Launch date:start` = the ad's `created_time` (Taipei day). Count as "went live".
+2. Else if another ACTIVE or tracked ad with the same `name` already maps to a row (relaunch) → append the id to that row's `Meta ad ID(s)` (comma-separated), keep the earliest Launch date. Count as "relaunch merged".
+3. Else create a roadmap page in `collection://46a9a0c5-2240-4576-8574-ce81793d224b` with:
+   - `Name` = a clean 繁體中文 display name built from the ad-name segments, format `[創作者/類型] - 主題` (e.g. `Camel UGC - 職場英文溝通・AI 主管模擬`, `26Q3 促銷靜圖 - P1 倒數 Day1`). Translate the c4 angle (painpoint 痛點 / testimonial 見證 / productdemo 產品示範 / speakmethod 學習方法 / valueprop 價值主張 / scenario 情境 / campaign 檔期 / discount 折扣), use the c6 creator handle, the c8 descriptor in natural zh-TW, keep v1/v2 markers, drop pixel sizes, keep unique vs existing names. Traditional Chinese only.
+   - `Ad Name` = the Meta ad name verbatim
+   - `Meta ad ID(s)` = the id
+   - `Production Status` = `On Air`, `SP status` = `Testing`, `Channel` = `["Meta"]`
+   - `Market` = `HK 🇭🇰` if the campaign name starts with `hk_` / `HK_`, else `TW 🇹🇼`
+   - `date:Launch date:start` = created_time (Taipei day); `date:Last synced:start` = today
+   - Leave Category / Format / Source / Owner empty for a human.
+   - Cap: at most 20 new rows per run (highest 7-day spend first); list any remainder in the report — they are picked up tomorrow.
 
-If two live ads share the same name (relaunch), do **not** create a second row: append the new ad id to the existing row's `Meta ad ID(s)` as a comma-separated list and keep the earliest Launch date.
+## STEP 3 — BigQuery (two queries, run verbatim from the repo files)
 
-## STEP 3 — Run the SP score query in BigQuery
+Read `automation/sp_score.sql` and `automation/ltv_cac.sql` from this repo and run each once with `execute_sql_readonly` against project `speak-v2-2a1f1`. Do not edit, "modernize" or re-anchor them to `CURRENT_DATE()`; every date inside is derived from `MAX(date)` because the funnel table lags ~2 days. Do not paste the SQL into your summary.
 
-Run this verbatim with `execute_sql_readonly` against project `speak-v2-2a1f1`. The funnel table lags real time by ~2 days; every date in this query is derived from the data itself, never `CURRENT_DATE()` — do not "modernize" it.
+- `sp_score.sql` returns one row per (ad_id, country, os) for **Taiwan and Hong Kong**. Collapse to one row per ad_id: best (highest) `sp_score`, summed `trial_starts_total` and `spend_total`, `cpft` recomputed as summed spend / summed trials (NULL when trials = 0). `phase2_result` is populated for Taiwan only (no HK CPFT threshold yet).
+- `ltv_cac.sql` returns exactly one row per ad_id with `market`, `launch_date`, `cpft`, `ltv_cac`, `spend_7d`, `trial_starts_7d`, `cpft_7d`, plus `activity_total` (lifetime installs, or checkouts for web ads — the SP "10-install" activity), `dominant_campaign_name` and `campaign_stage` (`testing` / `scaling` / `other`, from the campaign the ad spent most in). It is market-aware (TW vs HK, cohort LTV month 35) and pre-suppresses `cpft` / `ltv_cac` to NULL for awareness-dominant ads, zero trials, or < 1 estimated conversion. Never "fix" the `'Hong Kong / Macau'` mapping inside it.
 
-```sql
--- SP score for Taiwan Meta ads, replicated from Hex "[TW] Meta Ads SP Dashboard"
--- (default baseline: Launch → 10-install, 7-day floor).
-WITH daily_per_ad AS (
-    SELECT ad_id, ad_name, country, os, campaign_name, date,
-        SUM(installs) AS installs,
-        SUM(checkouts_initiated) AS checkouts_initiated
-    FROM `speak-v2-2a1f1.analytics.meta_ads_creative_report_funnel`
-    WHERE date >= DATE '2025-01-01' AND country = 'Taiwan'
-    GROUP BY ad_id, ad_name, country, os, campaign_name, date
-),
-daily_cumulative AS (
-    SELECT ad_id, ad_name, country, os, campaign_name, date,
-        SUM(CASE WHEN os = 'web' THEN checkouts_initiated ELSE installs END)
-            OVER (PARTITION BY ad_id, country, os ORDER BY date ROWS UNBOUNDED PRECEDING) AS cumulative_activity
-    FROM daily_per_ad
-    WHERE installs > 0 OR checkouts_initiated > 0
-),
-ten_install_ads AS (
-    SELECT ad_id, ad_name, country, os, campaign_name, date AS ten_install_date
-    FROM daily_cumulative
-    WHERE cumulative_activity >= 10
-    QUALIFY ROW_NUMBER() OVER (PARTITION BY ad_id, country, os ORDER BY date) = 1
-),
-launch_dates AS (
-    SELECT ad_id, country, os, MIN(date) AS launch_date
-    FROM `speak-v2-2a1f1.analytics.meta_ads_creative_report_funnel`
-    WHERE date >= DATE '2025-01-01' AND spend > 0 AND country = 'Taiwan'
-    GROUP BY ad_id, country, os
-),
-qualifying_ads AS (
-    SELECT t.*, l.launch_date
-    FROM ten_install_ads t
-    INNER JOIN launch_dates l ON t.ad_id = l.ad_id AND t.country = l.country AND t.os = l.os
-),
-raw_daily AS (
-    SELECT ad_id, country, os, placement, date,
-        SUM(spend) AS spend, SUM(impressions) AS impressions, SUM(clicks) AS clicks,
-        SUM(installs) AS installs, SUM(trial_starts) AS trial_starts,
-        SUM(initial_purchases) AS initial_purchases, SUM(checkouts_initiated) AS checkouts_initiated
-    FROM `speak-v2-2a1f1.analytics.meta_ads_creative_report_funnel`
-    WHERE date >= DATE '2025-01-01' AND country = 'Taiwan' AND placement IS NOT NULL AND spend > 0
-    GROUP BY ad_id, country, os, placement, date
-),
-ad_placement_metrics AS (
-    SELECT q.ad_id, q.country, q.os, q.launch_date, q.ten_install_date, r.placement,
-        SUM(r.spend) AS spend, SUM(r.impressions) AS impressions, SUM(r.clicks) AS clicks,
-        SUM(r.installs) AS installs, SUM(r.checkouts_initiated) AS checkouts_initiated,
-        SAFE_DIVIDE(SUM(r.clicks), SUM(r.impressions)) AS ctr,
-        CASE
-            WHEN q.os = 'web' THEN SAFE_DIVIDE(SUM(r.checkouts_initiated), SUM(r.clicks))
-            WHEN q.os IN ('ios','android') THEN SAFE_DIVIDE(SUM(r.installs), SUM(r.clicks))
-            ELSE 0
-        END AS cti
-    FROM qualifying_ads q
-    INNER JOIN raw_daily r
-        ON q.ad_id = r.ad_id AND q.country = r.country AND q.os = r.os
-       AND r.date BETWEEN q.launch_date AND q.ten_install_date
-    WHERE r.clicks > 0
-    GROUP BY q.ad_id, q.country, q.os, q.launch_date, q.ten_install_date, r.placement
-),
-ad_total_spend AS (
-    SELECT ad_id, country, os, SUM(spend) AS total_ad_spend
-    FROM ad_placement_metrics GROUP BY ad_id, country, os
-),
-placement_benchmarks AS (
-    SELECT a.ad_id, a.country, a.os, a.placement, a.spend, a.ctr, a.cti,
-        t.total_ad_spend,
-        SAFE_DIVIDE(SUM(b.clicks) - a.clicks, SUM(b.impressions) - a.impressions) AS benchmark_ctr,
-        CASE
-            WHEN a.os = 'web' THEN SAFE_DIVIDE(SUM(b.checkouts_initiated) - a.checkouts_initiated, SUM(b.clicks) - a.clicks)
-            WHEN a.os IN ('ios','android') THEN SAFE_DIVIDE(SUM(b.installs) - a.installs, SUM(b.clicks) - a.clicks)
-            ELSE 0
-        END AS benchmark_cti
-    FROM ad_placement_metrics a
-    INNER JOIN raw_daily b
-        ON a.placement = b.placement AND a.country = b.country AND a.os = b.os
-       AND b.date BETWEEN LEAST(a.launch_date, DATE_SUB(a.ten_install_date, INTERVAL 6 DAY)) AND a.ten_install_date
-       AND b.clicks > 0
-    INNER JOIN ad_total_spend t ON a.ad_id = t.ad_id AND a.country = t.country AND a.os = t.os
-    GROUP BY a.ad_id, a.country, a.os, a.placement, a.spend, a.ctr, a.cti,
-        a.clicks, a.impressions, a.installs, a.checkouts_initiated, t.total_ad_spend
-),
-placement_sp AS (
-    SELECT ad_id, country, os,
-        SUM(SAFE_DIVIDE(spend, total_ad_spend)
-            * (COALESCE(SAFE_DIVIDE(ctr, benchmark_ctr), 0) + COALESCE(SAFE_DIVIDE(cti, benchmark_cti), 0))) AS sp_score
-    FROM placement_benchmarks
-    WHERE total_ad_spend > 10
-    GROUP BY ad_id, country, os
-),
-phase2 AS (
-    -- Taiwan Phase 2: cumulative trial_starts; CPFT threshold $58 (<=58 wins, >58 loses)
-    SELECT f.ad_id, f.country, f.os,
-        SUM(f.trial_starts) AS trial_starts_total,
-        SUM(f.spend) AS spend_total,
-        SAFE_DIVIDE(SUM(f.spend), NULLIF(SUM(f.trial_starts),0)) AS cpft
-    FROM `speak-v2-2a1f1.analytics.meta_ads_creative_report_funnel` f
-    WHERE f.date >= DATE '2025-01-01' AND f.country = 'Taiwan'
-    GROUP BY f.ad_id, f.country, f.os
-)
-SELECT
-    q.ad_id, q.ad_name, q.os, q.campaign_name, q.launch_date, q.ten_install_date,
-    p.sp_score,
-    p2.trial_starts_total, p2.spend_total, p2.cpft,
-    CASE
-        WHEN p.sp_score IS NULL THEN 'Insufficient spend'
-        WHEN p.sp_score >= 2.5 THEN 'Strong'
-        WHEN p.sp_score >= 2.0 THEN 'Validated'
-        ELSE 'Below Baseline'
-    END AS sp_tier,
-    CASE
-        WHEN p.sp_score >= 2.0 AND p2.trial_starts_total >= 10 AND p2.cpft <= 58 THEN 'P2 Winner'
-        WHEN p.sp_score >= 2.0 AND p2.trial_starts_total >= 10 AND p2.cpft > 58 THEN 'CPFT Loser'
-        ELSE NULL
-    END AS phase2_result
-FROM qualifying_ads q
-LEFT JOIN placement_sp p ON q.ad_id = p.ad_id AND q.country = p.country AND q.os = p.os
-LEFT JOIN phase2 p2 ON q.ad_id = p2.ad_id AND q.country = p2.country AND q.os = p2.os
-ORDER BY p.sp_score DESC
-```
+For rows with several ad IDs, sum spend / trials / activity / spend_7d / trial_starts_7d across IDs before computing ratios, take the best SP, and take `campaign_stage` from the highest-spend ID.
 
-Rows come back per (ad_id, os). Collapse to one row per ad_id: sum `trial_starts_total` and `spend_total`, take the **best (highest) `sp_score`**, and recompute `cpft = summed spend_total / summed trial_starts_total` (NULL when trial starts are 0). Join to roadmap rows by ad_id.
+## STEP 4 — Compute the target state for every row in REFRESH SCOPE
 
-## STEP 3b — LTV/CAC and CPFT for EVERY matched ad (not just SP-scored ones)
-
-CPFT and LTV/CAC must be filled for every live row where the denominators are real, even when the ad has no SP score yet. Run the LTV/CAC query stored at `automation/ltv_cac.sql` in this repo (same BigQuery project) — it computes lifetime per-ad: spend, trial_starts, CPFT, est_conversions (initial purchases + trial starts × Meta-channel trial-convert-rate), LTV (est_conversions × cohort_ltv month_index 35), CAC, and LTV/CAC. It is MARKET-AWARE: each ad is scored in its dominant delivery market (Taiwan or Hong Kong — 18 of the live rows are HK ads), and the cohort_ltv market label for HK is 'Hong Kong / Macau' (plain 'Hong Kong' silently returns zero rows — never "fix" that mapping). The query pre-suppresses cpft/ltv_cac to NULL for awareness-dominant ads, zero trials, or est_conversions < 1 — write only non-NULL values, never 0. Collapse multi-ID rows by summing components before ratios.
-
-## STEP 4 — Write metrics back (only what changed)
-
-For each matched roadmap row, compute:
-
-- **SP score** = sp_score rounded to 2 decimals
-- **SP status** by this mapping, in order:
-  - `Hit Ad` — sp_score >= 2.0 AND trial_starts_total >= 10 AND cpft <= 58
-  - `P2 Loser` — sp_score >= 2.0 AND trial_starts_total >= 10 AND cpft > 58
-  - `Winner` — sp_score >= 2.0 and fewer than 10 trial starts
-  - `Mid-tier` — 1.5 <= sp_score < 2.0
+- **SP score** = best sp_score, 2 decimals (untouched if NULL).
+- **SP status**, first match wins:
+  - `P2 Hit Ad` — Taiwan, sp_score ≥ 2.0, trial_starts_total ≥ 10, cpft ≤ 58
+  - `P2 Loser` — Taiwan, sp_score ≥ 2.0, trial_starts_total ≥ 10, cpft > 58
+  - `P1 Winner` — sp_score ≥ 2.0 (Taiwan with < 10 trials, or any HK ad — HK has no Phase-2 threshold yet, so HK rows stop at P1)
+  - `Mid-tier` — 1.5 ≤ sp_score < 2.0
   - `Pause` — sp_score < 1.5
-  - `Testing` — no sp_score (insufficient spend)
-- **CPFT** = cpft rounded to 2 decimals (from Step 3b — write for every row with trial starts > 0, SP score or not; leave untouched if NULL)
-- **LTV/CAC** = from Step 3b, rounded to 2 decimals (write whenever computable, SP score or not; leave untouched if NULL)
-- **Spend to date** = lifetime spend from Meta (Step 2), summed across all ad IDs on the row
+  - `Testing` — no sp_score
+- **CPFT** = ltv_cac.sql `cpft` (2 decimals); **LTV/CAC** = ltv_cac.sql `ltv_cac` (2 decimals). Both written whenever non-NULL, SP score or not.
+- **Spend to date** = lifetime spend from Step 2b summed across the row's IDs (integer dollars). Fall back to BigQuery `spend_total` only if 2b failed.
+- **Market** = mapped from ltv_cac.sql `market` — write only when the row's `Market` is empty (humans may override).
+- **Launch date** = ltv_cac.sql `launch_date` — write only when the row's `Launch date` is empty (the `Win flag` formula needs it).
+- **Watch flag** (live rows only, i.e. On Air):
+  - `Pause-candidate` when sp_score < 1.5
+  - else `Watch List` when `trial_starts_7d` ≥ 5 and `cpft_7d` > 1.3 × lifetime `cpft`
+  - else `None` if a flag is currently set (leave empty rows empty)
 
-Call `notion-update-page` once per row and include **only properties whose value actually differs** from what Step 1 returned — this keeps the Notion edit history readable. Always set `date:Last synced:start` = today, even when nothing else changed. If a row has multiple ad IDs, sum spend across them and use the best SP among them (as collapsed above).
+## STEP 5 — Write, in this order
 
-## STEP 5 — Hit Ad transitions
+### 5.1 Status transitions (do these before any metric write)
 
-If a row's new SP status is `Hit Ad` **and** its `Hit ad` checkbox is currently `__NO__`/empty:
+**a. Pause detection.** A row currently `On Air` whose **every** listed ad ID is non-ACTIVE or not found in Step 2b → `Production Status` = `Pause`, `date:Paused date:start` = today. If some IDs are still ACTIVE, do nothing. Prefill `Pause reason` only when confident, in this order:
+1. `License Expired` — the row has a `Relation to Influencer Licenses`; `notion-fetch` the row and read the `License days left` rollup; use this if ≤ 0.
+2. `Budget Capped` — `campaign_stage` = `testing`, lifetime `spend_total` between $140 and $300 (the $150 daily cap, checked once a day, usually stops between $145 and $275), **and** (`activity_total` < 10 **or** no `sp_score`). The ad never cleared the 10-install gate, so it was capped rather than judged.
+3. `SP Threshold` — the freshly computed SP status is `Pause`.
+4. `Graduate (Winning)` — an ACTIVE ad from Step 2a has the same c6 creator segment **and** the same c8 descriptor as this row's `Ad Name`, sits in a campaign whose name contains `scaling`, `winning` or `cpr`, and was created within the last 14 days (the test version was promoted).
+5. `Fatigue` — only when `campaign_stage` = `scaling` (winning / scaling / cpr campaigns) **and** the ad was already showing decay: the row's `Watch flag` was `Watch List`, or `trial_starts_7d` ≥ 5 with `cpft_7d` > 1.3 × lifetime `cpft`. Never for testing-campaign ads, whatever their numbers look like.
+6. `Campaign End` — five or more rows are being paused in this run **and** every ad of this row's `campaign_id` is now non-ACTIVE (the campaign was switched off). Apply to all rows of that campaign; do not ping owners for them. (Humans also use this option when a promotional season ends — treat an existing `Campaign End` as final.)
+7. Otherwise leave `Pause reason` empty and add the row to the "needs reason" list (one batched ping in Step 5.5, marked with a `pause-ping-sent <YYYY-MM-DD>` comment on each row).
 
-1. Set `Hit ad` = `"__YES__"`.
-2. Invoke the Skill tool with skill name `hit-ad-to-slack`, passing the Meta ad ID and the SP score, so the win is posted to #hit-ads-library. Use the highest-spend ad ID if the row has several.
+When you prefill a reason, mention it in the report's *Paused* section with the evidence in parentheses, e.g. `Budget Capped ($209 lifetime, 5 installs, testing campaign)`, so a wrong prefill is easy to spot and override.
 
-Only fire this on the transition — never re-fire for a row already checked.
+**b. Went live / relaunch merged / new rows** from Step 2c.
 
-## STEP 6 — Pause detection
+**c. Relaunch detection.** A `Pause` row (any age, any reason) with at least one ad ID that is ACTIVE in Step 2b **and** has `spend_7d` > 0 in ltv_cac.sql (or 7-day Meta spend > 0 in 2a) is running again → `Production Status` = `On Air`, clear `date:Paused date:start` (write null), clear `Pause reason` (null), and leave a comment `relaunch-detected <YYYY-MM-DD> · previous reason: <reason or none>` on the page. Report under *Relaunched*. ACTIVE-but-not-delivering ads do **not** trigger this — they stay paused and are not listed night after night; report only the count.
 
-A roadmap row currently `On Air` or `Scale` whose **every** listed Meta ad ID is no longer ACTIVE in the Step 2 pull (paused, archived, deleted, or absent from the account):
+**d. Hit Ad transitions.** If the new SP status is `P2 Hit Ad` and `Hit ad` is `__NO__`/empty: set `Hit ad` = `"__YES__"`, then invoke the Skill tool `hit-ad-to-slack` with the highest-spend ad ID and the SP score so the win is posted to #hit-ads-library. If the Skill tool is unavailable, post a short card to #hit-ads-library yourself (name, ad ID, SP, CPFT, spend, Notion link). Fire only on the transition, never for a row already checked.
 
-**Before acting, verify absence individually.** An ad missing from the bulk pull may be a pagination/API artifact, not a paused ad. For each ad ID about to be declared inactive, make one direct `ads_get_ad_entities` call filtered to that specific ad ID and confirm its `effective_status` is genuinely not ACTIVE (or the ad truly does not exist). Only pause the row when every ID is individually confirmed. If the verification call errors, skip the row this run and note it in the report instead of pausing.
+### 5.2 Metrics on live rows (On Air / Ready-to-Test with IDs)
 
-1. Set `Production Status` = `Pause` and `date:Paused date:start` = today.
-2. Prefill `Pause reason` only when confident:
-   - `License Expired` — `notion-fetch` the page and read the `License days left` rollup; use this if it is <= 0.
-   - `SP Threshold` — if the freshly-written SP status is `Pause`.
-   - Otherwise leave `Pause reason` **empty**.
-3. When you left it empty, post to `C0ASFA5F1B3` tagging the row's `Owner` (resolve the person via `notion-get-users`; fall back to `<@U0A1E7WENQ6>` if Owner is empty or unresolvable) asking them to fill in Pause reason + Learnings, with a link to the Notion page.
+Write the Step 4 target state, changed properties only.
 
-If some but not all of a row's ad IDs went inactive, do nothing — the creative is still running.
+### 5.3 Metrics on recently paused rows in REFRESH SCOPE
 
-## STEP 6b — Influencer license upkeep
+Same as 5.2. These are rows paused ≤ 14 days ago or still missing a reason — their final numbers are what the iteration review and Learnings rely on.
 
-For live rows (`On Air`/`Scale`) whose `Relation to Influencer Licenses` is non-empty:
+### 5.4 Hygiene
 
-1. **Start the countdown at launch.** `notion-fetch` the related license page(s). If a license's `Launch date` is EMPTY and the roadmap row is now live, set the license's `date:Launch date:start` = the roadmap row's Launch date (the `License end day` / `License days left` formulas take over from there).
-2. **Attach new cuts to existing licenses.** When Step 2 creates a row for a newly-discovered ad whose c6 creator segment matches an influencer license created in the last 60 days (match on the creator handle in `SNS Account`/`Name`), set the new row's `Relation to Influencer Licenses` to that license — hook variants and frame cuts share the source license.
-3. **Expiry early-warning.** If a live row's `License days left` rollup is ≤ 3 (fetch per page; the rollup is not SQL-queryable), add a line to the Slack report under `*⚠️ License expiring*` with the row name, days left, and license end day — so Kevin can pause or renew BEFORE Meta runs an unlicensed ad.
-4. Pause reason prefill for `License Expired` (Step 6) uses this same rollup — a paused influencer ad with days left ≤ 0 explains itself.
+- **Archive:** `Pause` rows with `Paused date` more than 14 days ago **and** `Pause reason` filled → `Production Status` = `Archive`. Oldest first, at most 40 per run (the rest tomorrow). Skip rows without a `Paused date` and list them once under *Data notes*.
+- **Re-ping missing reasons:** `Pause` rows 3+ days old with an empty `Pause reason`. Before pinging, `notion-get-comments` on the page and skip if a `pause-ping-sent` comment exists from the last 7 days. Add the rest to the batched ping (5.5) and comment `pause-ping-sent <YYYY-MM-DD>` after the Slack post succeeds.
+- **Influencer license upkeep** (live rows with `Relation to Influencer Licenses`): if the related license's `Launch date` is empty, set it to the row's Launch date so the `License end day` / `License days left` formulas start. If a live row's `License days left` rollup is ≤ 3, add it to *⚠️ License expiring* in the report. When Step 2c creates a row whose c6 creator matches an influencer license created in the last 60 days (`SNS Account` / `Name`), set `Relation to Influencer Licenses` on the new row.
 
-## STEP 7 — Watch flags
+### 5.5 Slack
 
-For rows that are still live (`On Air`/`Scale`):
+Post at most two messages to `C0ASFA5F1B3`, in this order:
 
-- sp_score < 1.5 → `Watch flag` = `Pause-candidate`
-- CPFT worsened by more than 30% versus the row's trailing average CPFT (compare today's computed CPFT against the last stored `CPFT` value from Step 1 as the trailing reference), or 7-day frequency is a concern in the Meta pull → `Watch flag` = `Watch List`
-- Neither condition and the flag is currently set → reset to `None`
-
-`Pause-candidate` outranks `Watch List` when both apply.
-
-## STEP 8 — Archive hygiene
-
-- Row in `Pause` with `date:Paused date:start` more than 14 days ago **and** `Pause reason` filled → set `Production Status` = `Archive`. (Sample rows are excluded by the guard — check it again here, this is where they are most tempting.)
-- Row in `Pause` for 3+ days with `Pause reason` still empty → re-ping the Owner. Ping **at most once**: call `notion-get-comments` on the page first and skip if a ping comment already exists from within the last 7 days. When you do ping, post to Slack **and** leave a Notion comment `pause-ping-sent <YYYY-MM-DD>` on the page to mark it.
-
-## STEP 9 — Slack report
-
-Post one compact message to `C0ASFA5F1B3`. **If nothing changed at all — no new rows, no status changes, no hit ads, no pings — post nothing and end silently.**
+1. **Owner ping** (only if the "needs reason" list is non-empty): one message tagging each row's Owner (resolve via `notion-get-users`; fall back to `<@U0A1E7WENQ6>`), one bullet per row with spend / CPFT and the Notion link, and the exact allowed `Pause reason` options. Never one message per row.
+2. **Nightly report.** If nothing changed at all — no new rows, no status changes, no hit ads, no archives, no pings — post nothing and end silently.
 
 ```
 🌙 *TW Creative Roadmap sync — <YYYY-MM-DD>*
-Synced: X ads · Created: X new rows · Updated: X rows
+Meta ACTIVE: X · tracked rows refreshed: X · new rows: X · archived: X
 
 *New rows* (need Category/Format/Owner)
-• <ad name> — <Notion link>
+• <Name> — <Notion link> · $<7d spend>
 
-*Status changes*
-• <name>: SP <old> → <new> · <old SP status> → <new SP status>
-• <name>: On Air → Pause (reason: <reason or "needs owner input">)
+*Went live / relaunched*
+• <Name>: Ready-to-Test → On Air (ad <id>)
+• <Name>: Pause → On Air (relaunch, $<7d spend>)
 
-*🏆 Hit ads* — <name> (SP <score>, CPFT $<cpft>) → posted to #hit-ads-library
+*Paused*
+• <Name>: On Air → Pause (<reason + evidence, or "needs owner input">)
+• <campaign name>: X rows → Campaign End
 
-*Watch flags* — X pause-candidates, X watch list
+*SP changes*
+• <Name>: SP <old> → <new> · <old status> → <new status>
 
-*Waiting on owners* — <@owner> <name> needs Pause reason + Learnings <link>
+*🏆 Hit ads* — <Name> (SP <score>, CPFT $<cpft>) → posted to #hit-ads-library
+
+*Watch flags* — X pause-candidates, X watch list (<names>)
+*⚠️ License expiring* — <Name>: <days> days left (<end day>)
+*Waiting on owners* — X paused rows still need a Pause reason (see ping above)
+*Data notes* — <BigQuery MAX(date)>, skipped legacy ads, capped work carried to tomorrow, errors>
 ```
 
-Then report the same summary as your task output. Do not touch any roadmap row that fails the sample-row guard, do not delete rows, and do not write anything to Meta or BigQuery.
+Report the same summary as your task output. Never delete rows, never write to Meta or BigQuery, never touch rows outside TRACKED ROW / REFRESH SCOPE except through rules 5.1c and 5.4.

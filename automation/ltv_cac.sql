@@ -60,6 +60,21 @@
 --   6. CPFT = spend / trial_starts over the lifetime (raw trial_starts, matching
 --      automation/sp_score.sql).
 --
+--   7. (added 2026-09-08) TRAILING-7-DAY WINDOW for the nightly watch flag: spend_7d,
+--      trial_starts_7d and cpft_7d cover the 7 funnel days ending at MAX(date). The
+--      nightly sync compares cpft_7d against lifetime cpft (Watch List when cpft_7d is
+--      > 30% worse AND trial_starts_7d >= 5) instead of against yesterday's stored value.
+--      spend_7d > 0 also tells the sync an ad is genuinely delivering (relaunch detection).
+--
+--   8. (added 2026-09-09) CAMPAIGN STAGE + ACTIVITY for Pause-reason prefill:
+--      dominant_campaign_name = the campaign where the ad spent the most;
+--      campaign_stage = 'testing' when that name contains "testing", 'scaling' when it
+--      contains "scaling" / "winning" / "cpr", else 'other';
+--      activity_total = lifetime installs (app os) or checkouts_initiated (web) — the same
+--      "10-install" activity the SP baseline uses. The nightly sync prefills
+--      `Budget Capped` for testing-stage ads that stopped at the $150 daily cap with
+--      < 10 activity, and only allows `Fatigue` for scaling-stage ads.
+--
 -- SUPPRESSION -- the consumer must leave the Notion field EMPTY (never write 0) when:
 --      cpft    IS NULL  -> trial_starts = 0
 --      ltv_cac IS NULL  -> est_conversions < 1 (less than one estimated conversion)
@@ -90,7 +105,8 @@ funnel AS (
     SELECT f.ad_id, f.campaign_id, f.campaign_name, f.ad_name, f.date, f.os,
            f.country, m.ltv_market,
            f.spend, f.trial_starts, f.adj_trial_starts,
-           f.initial_purchases, f.adj_initial_purchases
+           f.initial_purchases, f.adj_initial_purchases,
+           f.installs, f.checkouts_initiated
     FROM `speak-v2-2a1f1.analytics.meta_ads_creative_report_funnel` f
     JOIN market_map m ON m.funnel_country = f.country
     WHERE f.date >= DATE '2025-01-01'
@@ -126,6 +142,8 @@ ad_lifetime AS (
         SUM(adj_trial_starts)       AS adj_trial_starts_total,
         SUM(initial_purchases)      AS initial_purchases_total,
         SUM(adj_initial_purchases)  AS adj_initial_purchases_total,
+        -- SP-baseline activity: installs for app delivery, checkouts for web delivery
+        SUM(CASE WHEN os = 'web' THEN checkouts_initiated ELSE installs END) AS activity_total,
         -- share of spend in awareness-objective campaigns (Reach / Thruplay / Traffic /
         -- brand-awareness)
         SAFE_DIVIDE(
@@ -134,6 +152,33 @@ ad_lifetime AS (
             NULLIF(SUM(spend), 0))  AS awareness_spend_share
     FROM scoped
     GROUP BY ad_id
+),
+
+-- The campaign where the ad spent the most, and its lifecycle stage
+ad_dominant_campaign AS (
+    SELECT ad_id, campaign_name AS dominant_campaign_name,
+        CASE
+            WHEN REGEXP_CONTAINS(LOWER(campaign_name), r'testing')              THEN 'testing'
+            WHEN REGEXP_CONTAINS(LOWER(campaign_name), r'scaling|winning|cpr')  THEN 'scaling'
+            ELSE 'other'
+        END AS campaign_stage
+    FROM (
+        SELECT ad_id, campaign_name, SUM(spend) AS spend
+        FROM scoped
+        GROUP BY ad_id, campaign_name
+    )
+    QUALIFY ROW_NUMBER() OVER (PARTITION BY ad_id ORDER BY spend DESC, campaign_name) = 1
+),
+
+-- Trailing 7 funnel days ending at MAX(date), in the ad's own market
+ad_last7 AS (
+    SELECT s.ad_id,
+        SUM(s.spend)        AS spend_7d,
+        SUM(s.trial_starts) AS trial_starts_7d
+    FROM scoped s
+    CROSS JOIN anchor
+    WHERE s.date > DATE_SUB(anchor.max_date, INTERVAL 7 DAY)
+    GROUP BY s.ad_id
 ),
 
 -- ---- trial-convert rate (Meta Ads, per market, matured cohorts only) ----------------
@@ -207,11 +252,18 @@ calc AS (
         l.spend_total,
         l.trial_starts_total,
         l.initial_purchases_total,
+        l.activity_total,
+        c.dominant_campaign_name,
+        c.campaign_stage,
+        COALESCE(w.spend_7d, 0)        AS spend_7d,
+        COALESCE(w.trial_starts_7d, 0) AS trial_starts_7d,
         r.convert_rate,
         COALESCE(m.ltv_per_user, f.ltv_per_user) AS ltv_per_user,
         l.adj_initial_purchases_total + l.adj_trial_starts_total * r.convert_rate
             AS est_conversions
     FROM ad_lifetime l
+    LEFT JOIN ad_dominant_campaign c ON c.ad_id = l.ad_id
+    LEFT JOIN ad_last7 w ON w.ad_id = l.ad_id
     LEFT JOIN ad_convert_rate r ON r.ad_id = l.ad_id
     LEFT JOIN ltv_by_month m
            ON m.ltv_market = l.ltv_market
@@ -231,12 +283,20 @@ SELECT
     ROUND(spend_total, 2)                                   AS spend_total,
     trial_starts_total,
     initial_purchases_total,
+    activity_total,
+    dominant_campaign_name,
+    campaign_stage,
     ROUND(convert_rate, 4)                                  AS trial_convert_rate,
     ROUND(ltv_per_user, 2)                                  AS ltv_per_user,
     ROUND(est_conversions, 3)                               AS est_conversions,
     -- suppressed to NULL for awareness ads and zero-trial ads
     IF(is_awareness, NULL,
         ROUND(SAFE_DIVIDE(spend_total, NULLIF(trial_starts_total, 0)), 2)) AS cpft,
+    -- trailing-7-day window (watch flag + delivery check); cpft_7d NULL when no trials
+    ROUND(spend_7d, 2)                                      AS spend_7d,
+    trial_starts_7d,
+    IF(is_awareness, NULL,
+        ROUND(SAFE_DIVIDE(spend_7d, NULLIF(trial_starts_7d, 0)), 2))       AS cpft_7d,
     ROUND(est_conversions * ltv_per_user, 2)                AS ltv,
     ROUND(SAFE_DIVIDE(spend_total, NULLIF(est_conversions, 0)), 2)         AS cac,
     -- suppressed to NULL for awareness ads and ads with < 1 estimated conversion

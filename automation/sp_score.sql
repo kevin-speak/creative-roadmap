@@ -1,12 +1,25 @@
--- SP score for Taiwan Meta ads, replicated from Hex "[TW] Meta Ads SP Dashboard"
+-- SP score for Taiwan + Hong Kong Meta ads, replicated from Hex "[TW] Meta Ads SP Dashboard"
 -- (default baseline: Launch → 10-install, 7-day floor). Source of truth confirmed 2026-08-16.
 -- BigQuery project: speak-v2-2a1f1
-WITH daily_per_ad AS (
+--
+-- 2026-09-08: extended from Taiwan-only to Taiwan + Hong Kong. Every CTE is already
+-- partitioned by (ad_id, country, os) and the leave-one-out benchmarks are computed per
+-- placement × country × os, so HK ads are scored against HK ads only — the two markets never
+-- mix. The Phase-2 CPFT verdict ($58 threshold) is Taiwan-specific and is emitted for Taiwan
+-- rows only; HK rows get sp_score / sp_tier but phase2_result = NULL until an HK threshold
+-- is agreed (see automation/README.md "SP score").
+--
+-- The funnel table lags real time by ~2 days; every date here is derived from the data
+-- itself, never CURRENT_DATE() — do not "modernize" it.
+WITH markets AS (
+    SELECT 'Taiwan' AS country UNION ALL SELECT 'Hong Kong'
+),
+daily_per_ad AS (
     SELECT ad_id, ad_name, country, os, campaign_name, date,
         SUM(installs) AS installs,
         SUM(checkouts_initiated) AS checkouts_initiated
     FROM `speak-v2-2a1f1.analytics.meta_ads_creative_report_funnel`
-    WHERE date >= DATE '2025-01-01' AND country = 'Taiwan'
+    WHERE date >= DATE '2025-01-01' AND country IN (SELECT country FROM markets)
     GROUP BY ad_id, ad_name, country, os, campaign_name, date
 ),
 daily_cumulative AS (
@@ -25,7 +38,7 @@ ten_install_ads AS (
 launch_dates AS (
     SELECT ad_id, country, os, MIN(date) AS launch_date
     FROM `speak-v2-2a1f1.analytics.meta_ads_creative_report_funnel`
-    WHERE date >= DATE '2025-01-01' AND spend > 0 AND country = 'Taiwan'
+    WHERE date >= DATE '2025-01-01' AND spend > 0 AND country IN (SELECT country FROM markets)
     GROUP BY ad_id, country, os
 ),
 qualifying_ads AS (
@@ -39,7 +52,8 @@ raw_daily AS (
         SUM(installs) AS installs, SUM(trial_starts) AS trial_starts,
         SUM(initial_purchases) AS initial_purchases, SUM(checkouts_initiated) AS checkouts_initiated
     FROM `speak-v2-2a1f1.analytics.meta_ads_creative_report_funnel`
-    WHERE date >= DATE '2025-01-01' AND country = 'Taiwan' AND placement IS NOT NULL AND spend > 0
+    WHERE date >= DATE '2025-01-01' AND country IN (SELECT country FROM markets)
+      AND placement IS NOT NULL AND spend > 0
     GROUP BY ad_id, country, os, placement, date
 ),
 ad_placement_metrics AS (
@@ -90,17 +104,18 @@ placement_sp AS (
     GROUP BY ad_id, country, os
 ),
 phase2 AS (
-    -- Taiwan Phase 2: cumulative trial_starts; CPFT threshold $58 (<=58 wins, >58 loses)
+    -- Phase 2: cumulative trial_starts and lifetime CPFT per (ad, country, os).
+    -- The $58 win/lose threshold below is Taiwan-only.
     SELECT f.ad_id, f.country, f.os,
         SUM(f.trial_starts) AS trial_starts_total,
         SUM(f.spend) AS spend_total,
         SAFE_DIVIDE(SUM(f.spend), NULLIF(SUM(f.trial_starts),0)) AS cpft
     FROM `speak-v2-2a1f1.analytics.meta_ads_creative_report_funnel` f
-    WHERE f.date >= DATE '2025-01-01' AND f.country = 'Taiwan'
+    WHERE f.date >= DATE '2025-01-01' AND f.country IN (SELECT country FROM markets)
     GROUP BY f.ad_id, f.country, f.os
 )
 SELECT
-    q.ad_id, q.ad_name, q.os, q.campaign_name, q.launch_date, q.ten_install_date,
+    q.ad_id, q.ad_name, q.country, q.os, q.campaign_name, q.launch_date, q.ten_install_date,
     p.sp_score,
     p2.trial_starts_total, p2.spend_total, p2.cpft,
     CASE
@@ -110,6 +125,7 @@ SELECT
         ELSE 'Below Baseline'
     END AS sp_tier,
     CASE
+        WHEN q.country <> 'Taiwan' THEN NULL   -- no agreed HK CPFT threshold yet
         WHEN p.sp_score >= 2.0 AND p2.trial_starts_total >= 10 AND p2.cpft <= 58 THEN 'P2 Winner'
         WHEN p.sp_score >= 2.0 AND p2.trial_starts_total >= 10 AND p2.cpft > 58 THEN 'CPFT Loser'
         ELSE NULL
