@@ -20,7 +20,19 @@ Routine prompts (the source of truth for what each fired session does) are in [`
 | Creative Ideas Sync to Notion | Wed 17:00 | (prompt lives in the Routine itself, `trig_01CtXgi8zb5PzTXAMPzaAdwr`) | Slack #tw-creative → Ideas board |
 | TW Creative pipeline sync | 07:00 & 15:00 | `routine2_pipeline_sync.md` | Ideas (In progress) → Roadmap Plan rows; Roadmap (Ready-to-Test+) → Ideas Done; #tw-ads influencer intake → license + roadmap rows; Ready-to-Test pings (digest when 6+); design-done hints |
 | TW Creative Roadmap nightly sync | 22:00 | `routine1_nightly_sync.md` | Meta (ACTIVE + tracked IDs) + BigQuery SP / LTV-CAC → Roadmap; pause / relaunch / went-live detection; reason prefill; Hit-ad → #hit-ads-library; watch flags; archive hygiene; batched owner ping |
-| TW winning creative iteration analyst | Mon 10:30 | `routine3_winner_iteration.md` | P2 Hit Ad / P2 Loser rows → Motion analysis → iteration brief → "Winning Iteration" idea (cap 5/week, live rows first) |
+| TW winning creative iteration analyst | Mon 10:30 | `routine3_winner_iteration.md` | P2 Hit Ad / P2 Loser rows → Motion analysis → iteration brief → "Winning Iteration" idea (cap 5/week, live rows first); then posts the **weekly update log** (winning creatives · pause reasons needed · creative online log) with links to the three roadmap views |
+
+### Roadmap views used by the weekly log
+
+Created 2026-09-09 on the roadmap database (`b44d9c2c3834497d9f1dcb3e140170c8`). The weekly log links to them; recreate with the filters in routine 3 Step 7 if they ever go missing.
+
+| View | Filter | URL |
+|---|---|---|
+| 🏆 Winning creatives | SP score ≥ 2, sorted by SP | https://www.notion.so/b44d9c2c3834497d9f1dcb3e140170c8?v=3d6792ec2f10811aad8d000c465a7a27 |
+| ⏸️ Pause reason needed | Production Status = Pause and Pause reason empty, newest first | https://www.notion.so/b44d9c2c3834497d9f1dcb3e140170c8?v=3d6792ec2f1081fe9731000c626e0325 |
+| 🚀 Creative online log | Launch date set, newest first | https://www.notion.so/b44d9c2c3834497d9f1dcb3e140170c8?v=3d6792ec2f1081829fbb000ccd17b9fb |
+
+(The pre-existing "Live / Scale" view still filters on the removed `Scale` status; it is harmless but could be renamed to "Live".)
 
 ### Two generations of triggers exist — which one is live
 

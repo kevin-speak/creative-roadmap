@@ -137,4 +137,59 @@ Analyzed X of Y eligible ads (live first, then highest spend; cap 5/run).
 <@U0A1E7WENQ6> briefs are in the Ideas board, ready for prioritization.
 ```
 
+## STEP 7 — Weekly update log (always posted, even when Step 6 was silent)
+
+This is the human-inspection log for the week. It is a second, separate message in `C0ASFA5F1B3`, posted after the Step 6 summary (or on its own when there were no iteration candidates). It reads the roadmap only — no writes.
+
+**Views (already exist on the roadmap database — link to them, do not create duplicates):**
+
+| Section | View | URL |
+|---|---|---|
+| Winning creatives (SP ≥ 2) | 🏆 Winning creatives | https://www.notion.so/b44d9c2c3834497d9f1dcb3e140170c8?v=3d6792ec2f10811aad8d000c465a7a27 |
+| Pause reason needed | ⏸️ Pause reason needed | https://www.notion.so/b44d9c2c3834497d9f1dcb3e140170c8?v=3d6792ec2f1081fe9731000c626e0325 |
+| Creative online log | 🚀 Creative online log | https://www.notion.so/b44d9c2c3834497d9f1dcb3e140170c8?v=3d6792ec2f1081829fbb000ccd17b9fb |
+
+If a `notion-fetch` of the database shows one of these views missing (someone deleted it), recreate it with `notion-create-view` on database `b44d9c2c3834497d9f1dcb3e140170c8`, data source `collection://46a9a0c5-2240-4576-8574-ce81793d224b`, using exactly these configurations, then use the new URL:
+- 🏆 Winning creatives — `FILTER "SP score" >= 2; SORT BY "SP score" DESC`
+- ⏸️ Pause reason needed — `FILTER "Production Status" = "Pause" AND "Pause reason" IS EMPTY; SORT BY "Paused date" DESC`
+- 🚀 Creative online log — `FILTER "Launch date" IS NOT EMPTY; SORT BY "Launch date" DESC`
+
+**Data (one query):**
+
+```sql
+SELECT url, "Name", "Production Status", "SP status", "SP score", "CPFT", "LTV/CAC", "Spend to date",
+       "Market", "Format", "Owner", "Pause reason", "Hit ad",
+       "date:Launch date:start" AS launch, "date:Paused date:start" AS paused
+FROM "collection://46a9a0c5-2240-4576-8574-ce81793d224b"
+WHERE "Production Status" IN ('On Air','Pause')
+   OR date("date:Launch date:start") >= date('now','-7 days')
+```
+
+Compute, with "this week" = the 7 days ending today (Taipei):
+
+1. **Winning creatives** — rows with `SP score` ≥ 2 and `Production Status` = `On Air`, sorted by SP desc. List the top 8 (Name · SP · CPFT · spend · SP status · Market); mark rows whose Launch date is within the last 14 days as `🆕`. Add the total count of winners on air and the number of `P2 Hit Ad` rows among them.
+2. **Pause reason needed** — `Pause` rows with an empty `Pause reason`, newest Paused date first. List up to 10 (Name · paused date · spend · Owner mention via `notion-get-users`, fallback `<@U0A1E7WENQ6>`), then the total count. This is the back-fill queue; the view link is the working list.
+3. **Creative online log** — (a) rows whose Launch date is within the last 7 days: Name · Market · Format · spend · SP status; (b) rows whose Paused date is within the last 7 days: Name · reason (or "reason needed") · spend. Include counts for both.
+
+Post exactly this shape (Traditional Chinese labels are fine if the channel is mostly zh-TW; keep the structure):
+
+```
+📋 *TW Creative weekly log — week of <YYYY-MM-DD>*
+
+*🏆 Winning creatives* — X on air (X P2 Hit Ads) · <view link>
+• 🆕 <Name> — SP <score> · CPFT $<cpft> · $<spend> · <SP status> · <Market>
+• <Name> — …
+
+*⏸️ Pause reason needed* — X rows waiting · <view link>
+• <Name> — paused <date> · $<spend> · <@owner>
+• …
+(none this week → "all paused rows have a reason ✅")
+
+*🚀 Creative online log* — X launched · X paused this week · <view link>
+Launched:
+• <Name> — <Market> · <Format> · $<spend> · <SP status>
+Paused:
+• <Name> — <reason or "reason needed"> · $<spend>
+```
+
 Report the same summary as your task output. Never create more than one idea per parent ad in a single run, never write to Meta, and never touch roadmap rows.
