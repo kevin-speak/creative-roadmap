@@ -60,6 +60,12 @@
 --   6. CPFT = spend / trial_starts over the lifetime (raw trial_starts, matching
 --      automation/sp_score.sql).
 --
+--   7. (added 2026-09-08) TRAILING-7-DAY WINDOW for the nightly watch flag: spend_7d,
+--      trial_starts_7d and cpft_7d cover the 7 funnel days ending at MAX(date). The
+--      nightly sync compares cpft_7d against lifetime cpft (Watch List when cpft_7d is
+--      > 30% worse AND trial_starts_7d >= 5) instead of against yesterday's stored value.
+--      spend_7d > 0 also tells the sync an ad is genuinely delivering (relaunch detection).
+--
 -- SUPPRESSION -- the consumer must leave the Notion field EMPTY (never write 0) when:
 --      cpft    IS NULL  -> trial_starts = 0
 --      ltv_cac IS NULL  -> est_conversions < 1 (less than one estimated conversion)
@@ -136,6 +142,17 @@ ad_lifetime AS (
     GROUP BY ad_id
 ),
 
+-- Trailing 7 funnel days ending at MAX(date), in the ad's own market
+ad_last7 AS (
+    SELECT s.ad_id,
+        SUM(s.spend)        AS spend_7d,
+        SUM(s.trial_starts) AS trial_starts_7d
+    FROM scoped s
+    CROSS JOIN anchor
+    WHERE s.date > DATE_SUB(anchor.max_date, INTERVAL 7 DAY)
+    GROUP BY s.ad_id
+),
+
 -- ---- trial-convert rate (Meta Ads, per market, matured cohorts only) ----------------
 attr AS (
     SELECT a.country, a.campaign_id, a.trial_starts, a.trial_converts
@@ -207,11 +224,14 @@ calc AS (
         l.spend_total,
         l.trial_starts_total,
         l.initial_purchases_total,
+        COALESCE(w.spend_7d, 0)        AS spend_7d,
+        COALESCE(w.trial_starts_7d, 0) AS trial_starts_7d,
         r.convert_rate,
         COALESCE(m.ltv_per_user, f.ltv_per_user) AS ltv_per_user,
         l.adj_initial_purchases_total + l.adj_trial_starts_total * r.convert_rate
             AS est_conversions
     FROM ad_lifetime l
+    LEFT JOIN ad_last7 w ON w.ad_id = l.ad_id
     LEFT JOIN ad_convert_rate r ON r.ad_id = l.ad_id
     LEFT JOIN ltv_by_month m
            ON m.ltv_market = l.ltv_market
@@ -237,6 +257,11 @@ SELECT
     -- suppressed to NULL for awareness ads and zero-trial ads
     IF(is_awareness, NULL,
         ROUND(SAFE_DIVIDE(spend_total, NULLIF(trial_starts_total, 0)), 2)) AS cpft,
+    -- trailing-7-day window (watch flag + delivery check); cpft_7d NULL when no trials
+    ROUND(spend_7d, 2)                                      AS spend_7d,
+    trial_starts_7d,
+    IF(is_awareness, NULL,
+        ROUND(SAFE_DIVIDE(spend_7d, NULLIF(trial_starts_7d, 0)), 2))       AS cpft_7d,
     ROUND(est_conversions * ltv_per_user, 2)                AS ltv,
     ROUND(SAFE_DIVIDE(spend_total, NULLIF(est_conversions, 0)), 2)         AS cac,
     -- suppressed to NULL for awareness ads and ads with < 1 estimated conversion
