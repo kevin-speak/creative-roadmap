@@ -36,10 +36,10 @@ Created 2026-09-09 on the roadmap database (`b44d9c2c3834497d9f1dcb3e140170c8`).
 
 ### Two generations of triggers exist — which one is live
 
-| Set | Trigger IDs (nightly / pipeline / iteration) | How it fires | Status (2026-09-09) |
+| Set | Trigger IDs (nightly / pipeline / iteration) | How it fires | Status (2026-09-12) |
 |---|---|---|---|
-| **A — persistent session** (created 2026-08-16) | `trig_01EZ44tzBdZfTfJy1scvf128` / `trig_011EhN2rJaHcNoAKHPAY8it3` / `trig_01JqGLRu34KTW38yFpWNpDDt` | Fires into session `session_014szRHcYSqZhSCd695DuyA9`, which holds the connectors | Enabled. Works, but the session runs in *auto* permission mode and regularly stalls on a permission prompt (Kevin has to approve in the app), and it is at ~70% of its context window. Its prompts cannot be edited from another session; they tell the session to `git fetch` the branch, so it does pick up runbook changes. |
-| **B — fresh session per fire** (created 2026-09-03 from the Routines UI, so they carry connector grants) | `trig_01Mu2vcfPW9zXbT9N1s9nXn8` / `trig_01Bz5iWJZ9cBkXjhd2YeCaF4` / `trig_01NJznSip628rN38F1f1jHAL` | New session each time; the prompt clones this public repo first, then runs the runbook | Prompts and schedules updated 2026-09-09. Disabled until a DRY RUN fire completes without a permission stall — see "Switching to set B" below. |
+| **A — persistent session** (created 2026-08-16) | `trig_01EZ44tzBdZfTfJy1scvf128` / `trig_011EhN2rJaHcNoAKHPAY8it3` / `trig_01JqGLRu34KTW38yFpWNpDDt` | Fires into session `session_014szRHcYSqZhSCd695DuyA9`, which holds the connectors | **Disabled 2026-09-12.** Kept for history only. The session runs in *auto* permission mode, stalled on Notion-write prompts, and was near its context limit. Re-enable only if set B stops working. |
+| **B — fresh session per fire** (created 2026-09-03 from the Routines UI, so they carry connector grants) | `trig_01Mu2vcfPW9zXbT9N1s9nXn8` / `trig_01Bz5iWJZ9cBkXjhd2YeCaF4` / `trig_01NJznSip628rN38F1f1jHAL` | New session each time; the prompt clones this public repo first, then runs the runbook | **Live.** Nightly sync ran unattended on 2026-09-09, 09-10 and 09-11 (full reports in #tw-creative, archives, new rows, a hit-ad post, no permission stall). Pipeline sync and iteration analyst enabled 2026-09-12. |
 
 **Why not a third set:** triggers created by an agent (`create_trigger` from a session) carry neither connector grants nor a repo source in this org — verified again 2026-09-09 (created and deleted the same day). Only Routines created from the claude.ai Routines UI store connector grants. If set B ever needs re-creating, do it from the UI and paste the prompt text from set B (it is self-contained: it clones the repo itself).
 
