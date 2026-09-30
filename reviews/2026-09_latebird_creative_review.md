@@ -1,8 +1,8 @@
-# Creative Review — Sep 2026: 26Q3 LateBird (web) + ongoing app
+# TW Creative Review — Sep 2026: 26Q3 LateBird (web) + ongoing app
 
-Data: BigQuery `meta_ads_creative_report_funnel` through 2026-09-29 (lags ~2 days). SP and P1/P2 come from [`automation/sp_score.sql`](../automation/sp_score.sql). LTV/CAC uses the [`automation/ltv_cac.sql`](../automation/ltv_cac.sql) method over a Sep 1–29 window. Creative and engagement metrics come from Motion (workspace Speak_ZH), and age/gender comes from Meta. Ads with less than $50 of spend are excluded.
+Data: BigQuery `meta_ads_creative_report_funnel` through 2026-09-29 (lags ~2 days). SP and P1/P2 come from [`automation/sp_score.sql`](../automation/sp_score.sql). LTV/CAC uses the [`automation/ltv_cac.sql`](../automation/ltv_cac.sql) method over a Sep 1–29 window. Creative and engagement metrics come from Motion (workspace Speak_ZH), and age/gender comes from Meta. Scope: **Taiwan only** (`tw_meta_*` campaigns, Taiwan delivery). Ads with less than $50 of spend are excluded.
 
-**Rules:** an ad passes P1 at SP ≥ 2.0. P2 needs SP ≥ 2.0, at least 10 trials and a CPFT of $58 or less (Taiwan only). HK has no CPFT threshold, so HK ads stop at P1.
+**Rules:** an ad passes P1 at SP ≥ 2.0. P2 needs SP ≥ 2.0, at least 10 trials and a CPFT of $58 or less.
 
 ## 1. LTV/CAC
 
@@ -16,11 +16,9 @@ Data: BigQuery `meta_ads_creative_report_funnel` through 2026-09-29 (lags ~2 day
 | · `trial_ongoing_winning` | $18,689 | 287 | 15 | $65 | 1.19 |
 | · `trial_ongoing_scaling2` | $61,909 | 824 | 39 | $75 | 0.89 |
 | · `purchase_ongoing_no-disc_testing` | $17,238 | 122 | 8 | $141 | 0.83 |
-| **HK app total** | $29,770 | 345 | 8 | $86 | 0.61 |
 
 - LateBird prospecting (0.53) is the weakest paid line. Retargeting (0.91) is close to break-even with the app.
 - Rough benchmark: the August 26Q3 main promo (ASC + RTG) scores about 0.47 using the same method with the blended TW convert rate. LateBird beat the main promo.
-- HK app at 0.61 is a separate problem from creative.
 
 ## 2. SP and P1 status — LateBird (48 purchase-campaign ads)
 
@@ -48,7 +46,6 @@ Data: BigQuery `meta_ads_creative_report_funnel` through 2026-09-29 (lags ~2 day
 |---|---|---|---|---|---|---|---|
 | LateBird web | 48 | 30 | 27 | **56%** (90% of scored) | 15 | 5 | **10%** (33% of gated) |
 | TW app, new in Sep | 36 | 20 | 12 | **33%** (60% of scored) | 5 | 0 | **0%** |
-| HK app, new in Sep | 20 | 10 | 9 | 45% (90% of scored) | — | n/a (no HK threshold) | — |
 
 - The TW app ads that reached the P2 gate but failed CPFT are Jenny interview v1 ($109), Eaglish app-scaling relaunch ($65), Jenny v2 ($119), Qing solo-travel ($77, LTV/CAC 1.48) and Christine english-environment ($111).
 - Two app ads are close to P2 at 8 trials each: Shasha77 *no-embarrassment* (SP 4.07, CPFT $18) and *spaced-repetition* (SP 2.57, CPFT $55).
@@ -85,6 +82,6 @@ Data: BigQuery `meta_ads_creative_report_funnel` through 2026-09-29 (lags ~2 day
 
 ## Caveats
 
-- LTV/CAC uses one LTV per user for each market's cohort ($129.8 TW, $125 HK). It does not discount for the lower LTV of discounted annual plans.
+- LTV/CAC uses one LTV per user for the TW cohort ($129.8). It does not discount for the lower LTV of discounted annual plans.
 - Meta "purchases" differ from the funnel table's adjusted purchases (about 10% of raw on both LateBird and the main 26Q3 promo).
 - LateBird was live Sep 13–29. Several P1 ads stopped before reaching 10 trials.
