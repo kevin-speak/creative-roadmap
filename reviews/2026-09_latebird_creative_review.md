@@ -122,6 +122,6 @@ These are not losers. They cleared SP ≥ 2.0 with 10+ trials, beat most of the 
 
 - LTV/CAC includes Sep 17–29, which the Paid Opt Dash hides by default as not yet final. Late-September trials have not converted yet, so app figures are floors.
 - An AppsFlyer conversion-event outage (incident 2026-09-28) may undercount late-September app attribution until it is backfilled.
-- Web per-ad LTV/CAC is not available (campaign-level attribution only). $1.8K of LateBird LTV sits under a truncated campaign name (`26q3latebird`) and is excluded; including it, LateBird is about 0.84.
+- Web per-ad LTV/CAC is not available (campaign-level attribution only). LINE lifecycle messages and an AffiliateOne link also used `26Q3LateBird` as their UTM campaign ($1.8K LTV in Sep). They are not Meta and have no ad spend, so they are not part of the LateBird LTV/CAC above.
 - Meta "purchases" differ from the funnel table's adjusted purchases (about 10% of raw on both LateBird and the main 26Q3 promo).
 - LateBird was live Sep 13–29. Several P1 ads stopped before reaching 10 trials.
