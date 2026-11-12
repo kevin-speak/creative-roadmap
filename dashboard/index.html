@@ -83,15 +83,15 @@
 <div class="cr-page">
   <header class="cr-head">
     <h1 class="cr-title" id="page-title">Creative Roadmap &amp; Performance</h1>
-    <p class="cr-lede" id="lede">Funnel data through <b data-draw="lede-through" data-source="kpis" data-field="data_through" data-row="0">—</b>:
+    <p class="cr-lede" id="lede">Funnel data through <b data-draw="lede-through" data-source="funnel_kpis" data-field="data_through" data-row="0">—</b>:
       <b data-draw="lede-onair" data-source="kpis" data-field="on_air" data-row="0">—</b> creatives are on air
       (<b data-draw="lede-hit" data-source="kpis" data-field="p2_hit_live" data-row="0">—</b> P2 Hit Ads),
       <b data-draw="lede-rtt" data-source="kpis" data-field="ready_to_test" data-row="0">—</b> are ready to test, and
       <b data-draw="lede-noreason" data-source="kpis" data-field="pause_no_reason" data-row="0">—</b> paused rows still need a pause reason.
-      In the last 7 funnel days TW + HK spent <b data-draw="lede-spend" data-source="kpis" data-field="spend_7d" data-row="0">—</b>
-      for <b data-draw="lede-trials" data-source="kpis" data-field="trials_7d" data-row="0">—</b> trial starts,
-      a CPFT of <b data-draw="lede-cpft" data-source="kpis" data-field="cpft_7d" data-row="0">—</b>
-      (<b data-draw="lede-cpft-chg" data-source="kpis" data-field="cpft_7d_change" data-row="0">—</b> vs the 7 days before).</p>
+      In the last 7 funnel days TW + HK spent <b data-draw="lede-spend" data-source="funnel_kpis" data-field="spend_7d" data-row="0">—</b>
+      for <b data-draw="lede-trials" data-source="funnel_kpis" data-field="trials_7d" data-row="0">—</b> trial starts,
+      a CPFT of <b data-draw="lede-cpft" data-source="funnel_kpis" data-field="cpft_7d" data-row="0">—</b>
+      (<b data-draw="lede-cpft-chg" data-source="funnel_kpis" data-field="cpft_7d_change" data-row="0">—</b> vs the 7 days before).</p>
     <nav class="cr-tabs" aria-label="Sections">
       <button class="cr-tab-btn" type="button" data-tab="overview" aria-selected="true">Overview</button>
       <button class="cr-tab-btn" type="button" data-tab="roadmap" aria-selected="false">Roadmap</button>
@@ -145,14 +145,14 @@
 
   <!-- Overview -->
   <section id="overview" class="cr-section" data-tabpanel>
-    <div class="cr-grid" data-source="kpis">
+    <div class="cr-grid" data-source="kpis funnel_kpis">
       <div class="cr-card"><span class="cr-label">On air</span><span class="cr-num dash-skeleton" data-draw="k-onair" data-source="kpis" data-field="on_air" data-row="0">—</span><span class="cr-sub"><span data-draw="k-onair-tw" data-source="kpis" data-field="on_air_tw" data-row="0">—</span> TW · <span data-draw="k-onair-hk" data-source="kpis" data-field="on_air_hk" data-row="0">—</span> HK</span></div>
       <div class="cr-card"><span class="cr-label">Winners on air</span><span class="cr-num dash-skeleton" data-draw="k-win" data-source="kpis" data-field="winners_live" data-row="0">—</span><span class="cr-sub">SP ≥ 2 of <span data-draw="k-scored" data-source="kpis" data-field="scored_live" data-row="0">—</span> scored</span></div>
       <div class="cr-card"><span class="cr-label">Ready to test</span><span class="cr-num dash-skeleton" data-draw="k-rtt" data-source="kpis" data-field="ready_to_test" data-row="0">—</span><span class="cr-sub"><span data-draw="k-prod" data-source="kpis" data-field="in_production" data-row="0">—</span> in production · <span data-draw="k-plan" data-source="kpis" data-field="plan" data-row="0">—</span> planned</span></div>
       <div class="cr-card"><span class="cr-label">Needs attention</span><span class="cr-num dash-skeleton" data-draw="k-noreason" data-source="kpis" data-field="pause_no_reason" data-row="0">—</span><span class="cr-sub">paused, no reason · <span data-draw="k-watch" data-source="kpis" data-field="watch_list" data-row="0">—</span> on watch list</span></div>
-      <div class="cr-card"><span class="cr-label">Spend, last 7 days</span><span class="cr-num dash-skeleton" data-draw="k-spend" data-source="kpis" data-field="spend_7d" data-row="0">—</span><span class="cr-sub"><span data-draw="k-spend-chg" data-source="kpis" data-field="spend_7d_change" data-row="0">—</span> vs prior 7 · TW <span data-draw="k-spend-tw" data-source="kpis" data-field="spend_7d_tw" data-row="0">—</span></span></div>
-      <div class="cr-card"><span class="cr-label">Trial starts, last 7 days</span><span class="cr-num dash-skeleton" data-draw="k-trials" data-source="kpis" data-field="trials_7d" data-row="0">—</span><span class="cr-sub"><span data-draw="k-trials-chg" data-source="kpis" data-field="trials_7d_change" data-row="0">—</span> vs prior 7</span></div>
-      <div class="cr-card"><span class="cr-label">CPFT, last 7 days</span><span class="cr-num dash-skeleton" data-draw="k-cpft" data-source="kpis" data-field="cpft_7d" data-row="0">—</span><span class="cr-sub"><span data-draw="k-cpft-chg" data-source="kpis" data-field="cpft_7d_change" data-row="0">—</span> vs prior 7 · TW target ≤ $58</span></div>
+      <div class="cr-card"><span class="cr-label">Spend, last 7 days</span><span class="cr-num dash-skeleton" data-draw="k-spend" data-source="funnel_kpis" data-field="spend_7d" data-row="0">—</span><span class="cr-sub"><span data-draw="k-spend-chg" data-source="funnel_kpis" data-field="spend_7d_change" data-row="0">—</span> vs prior 7 · TW <span data-draw="k-spend-tw" data-source="funnel_kpis" data-field="spend_7d_tw" data-row="0">—</span></span></div>
+      <div class="cr-card"><span class="cr-label">Trial starts, last 7 days</span><span class="cr-num dash-skeleton" data-draw="k-trials" data-source="funnel_kpis" data-field="trials_7d" data-row="0">—</span><span class="cr-sub"><span data-draw="k-trials-chg" data-source="funnel_kpis" data-field="trials_7d_change" data-row="0">—</span> vs prior 7</span></div>
+      <div class="cr-card"><span class="cr-label">CPFT, last 7 days</span><span class="cr-num dash-skeleton" data-draw="k-cpft" data-source="funnel_kpis" data-field="cpft_7d" data-row="0">—</span><span class="cr-sub"><span data-draw="k-cpft-chg" data-source="funnel_kpis" data-field="cpft_7d_change" data-row="0">—</span> vs prior 7 · TW target ≤ $58</span></div>
       <div class="cr-card"><span class="cr-label">Launched, last 30 days</span><span class="cr-num dash-skeleton" data-draw="k-launched" data-source="kpis" data-field="launched_30d" data-row="0">—</span><span class="cr-sub">roadmap rows with a launch date</span></div>
     </div>
 
@@ -405,23 +405,13 @@ dash.calc('roadmap_rows', {
 });
 
 dash.calc('kpis', {
-  title: 'Headline figures',
-  description: 'Counts from the roadmap plus the last two 7-day windows of the daily market funnel.',
-  inputs: ['roadmap_rows', 'bq_daily_market'],
-  fn: (roadmap, daily) => {
-    const sum = (rows, f) => rows.reduce((s, r) => s + (+r[f] || 0), 0);
-    const dates = [...new Set(daily.map((d) => String(d.date)))].sort();
-    const through = dates[dates.length - 1] || '';
-    const last7 = new Set(dates.slice(-7)), prev7 = new Set(dates.slice(-14, -7));
-    const cur = daily.filter((d) => last7.has(String(d.date))), prev = daily.filter((d) => prev7.has(String(d.date)));
-    const spend7 = sum(cur, 'spend'), spendP = sum(prev, 'spend');
-    const trials7 = sum(cur, 'trial_starts'), trialsP = sum(prev, 'trial_starts');
-    const cpft7 = trials7 ? spend7 / trials7 : null, cpftP = trialsP ? spendP / trialsP : null;
-    const change = (a, b) => (a != null && b) ? (a - b) / b : null;
+  title: 'Roadmap headline counts',
+  description: 'Counts from the roadmap: on air, winners, ready to test, paused without a reason, watch list, launched in the last 30 days.',
+  inputs: ['roadmap_rows'],
+  fn: (roadmap) => {
     const live = roadmap.filter((r) => r.status === 'On Air');
     const cutoff = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
     return [{
-      data_through: through,
       on_air: live.length,
       on_air_tw: live.filter((r) => r.market === 'TW').length,
       on_air_hk: live.filter((r) => r.market === 'HK').length,
@@ -434,7 +424,27 @@ dash.calc('kpis', {
       pause_no_reason: roadmap.filter((r) => r.status === 'Pause' && !r.pause_reason).length,
       watch_list: live.filter((r) => r.watch === 'Watch List').length,
       pause_candidates: live.filter((r) => r.watch === 'Pause-candidate').length,
-      launched_30d: roadmap.filter((r) => r.launch && r.launch >= cutoff).length,
+      launched_30d: roadmap.filter((r) => r.launch && r.launch >= cutoff).length
+    }];
+  }
+});
+
+dash.calc('funnel_kpis', {
+  title: 'Funnel, last 7 days vs the 7 before',
+  description: 'Spend, trial starts and CPFT over the last 7 dates in the daily market funnel, compared with the 7 dates before.',
+  inputs: ['bq_daily_market'],
+  fn: (daily) => {
+    const sum = (rows, f) => rows.reduce((s, r) => s + (+r[f] || 0), 0);
+    const dates = [...new Set(daily.map((d) => String(d.date)))].sort();
+    const through = dates[dates.length - 1] || '';
+    const last7 = new Set(dates.slice(-7)), prev7 = new Set(dates.slice(-14, -7));
+    const cur = daily.filter((d) => last7.has(String(d.date))), prev = daily.filter((d) => prev7.has(String(d.date)));
+    const spend7 = sum(cur, 'spend'), spendP = sum(prev, 'spend');
+    const trials7 = sum(cur, 'trial_starts'), trialsP = sum(prev, 'trial_starts');
+    const cpft7 = trials7 ? spend7 / trials7 : null, cpftP = trialsP ? spendP / trialsP : null;
+    const change = (a, b) => (a != null && b) ? (a - b) / b : null;
+    return [{
+      data_through: through,
       spend_7d: spend7, spend_prev7: spendP, spend_7d_change: change(spend7, spendP),
       spend_7d_tw: sum(cur.filter((d) => d.market === 'Taiwan'), 'spend'),
       spend_7d_hk: sum(cur.filter((d) => d.market === 'Hong Kong'), 'spend'),
@@ -646,11 +656,11 @@ dash.calc('ad_lifetime', {
   function chip(label, cls) { const s = document.createElement('span'); s.className = 'cr-chip ' + (cls || ''); s.textContent = label; return s; }
 
   /* ---- Lede + KPI tiles ---- */
-  function kpi(name, field, format) {
+  function kpi(name, field, format, src) {
     dash.draw(name, (el) => {
-      const k = dash.data('kpis');
+      const k = dash.data(src || 'kpis');
       el.classList.toggle('dash-skeleton', k.status === 'loading');
-      if (k.status !== 'ok' || !k.data || !k.data.length) { el.textContent = '—'; el.classList.remove('cr-up', 'cr-down', 'cr-flat'); return; }
+      if (k.status !== 'ok' || !k.data || !k.data.length) { el.textContent = k.status === 'connect' ? 'needs BigQuery' : '—'; el.classList.remove('cr-up', 'cr-down', 'cr-flat'); return; }
       const v = k.data[0][field];
       if (format === 'change' || format === 'changeDown') {
         const s = signed(v, format === 'change'); el.textContent = s.t; el.classList.remove('cr-up', 'cr-down', 'cr-flat'); el.classList.add(s.c); return;
@@ -658,16 +668,16 @@ dash.calc('ad_lifetime', {
       el.textContent = format ? num(v, format) : (v == null || v === '' ? '—' : String(v));
     });
   }
-  kpi('lede-through', 'data_through'); kpi('lede-onair', 'on_air', fmt.int); kpi('lede-hit', 'p2_hit_live', fmt.int); kpi('lede-rtt', 'ready_to_test', fmt.int);
-  kpi('lede-noreason', 'pause_no_reason', fmt.int); kpi('lede-spend', 'spend_7d', fmt.money); kpi('lede-trials', 'trials_7d', fmt.int);
-  kpi('lede-cpft', 'cpft_7d', fmt.money2); kpi('lede-cpft-chg', 'cpft_7d_change', 'changeDown');
+  kpi('lede-through', 'data_through', null, 'funnel_kpis'); kpi('lede-onair', 'on_air', fmt.int); kpi('lede-hit', 'p2_hit_live', fmt.int); kpi('lede-rtt', 'ready_to_test', fmt.int);
+  kpi('lede-noreason', 'pause_no_reason', fmt.int); kpi('lede-spend', 'spend_7d', fmt.money, 'funnel_kpis'); kpi('lede-trials', 'trials_7d', fmt.int, 'funnel_kpis');
+  kpi('lede-cpft', 'cpft_7d', fmt.money2, 'funnel_kpis'); kpi('lede-cpft-chg', 'cpft_7d_change', 'changeDown', 'funnel_kpis');
   kpi('k-onair', 'on_air', fmt.int); kpi('k-onair-tw', 'on_air_tw', fmt.int); kpi('k-onair-hk', 'on_air_hk', fmt.int);
   kpi('k-win', 'winners_live', fmt.int); kpi('k-scored', 'scored_live', fmt.int);
   kpi('k-rtt', 'ready_to_test', fmt.int); kpi('k-prod', 'in_production', fmt.int); kpi('k-plan', 'plan', fmt.int);
   kpi('k-noreason', 'pause_no_reason', fmt.int); kpi('k-watch', 'watch_list', fmt.int);
-  kpi('k-spend', 'spend_7d', fmt.money); kpi('k-spend-chg', 'spend_7d_change', 'change'); kpi('k-spend-tw', 'spend_7d_tw', fmt.money);
-  kpi('k-trials', 'trials_7d', fmt.int); kpi('k-trials-chg', 'trials_7d_change', 'change');
-  kpi('k-cpft', 'cpft_7d', fmt.money2); kpi('k-cpft-chg', 'cpft_7d_change', 'changeDown');
+  kpi('k-spend', 'spend_7d', fmt.money, 'funnel_kpis'); kpi('k-spend-chg', 'spend_7d_change', 'change', 'funnel_kpis'); kpi('k-spend-tw', 'spend_7d_tw', fmt.money, 'funnel_kpis');
+  kpi('k-trials', 'trials_7d', fmt.int, 'funnel_kpis'); kpi('k-trials-chg', 'trials_7d_change', 'change', 'funnel_kpis');
+  kpi('k-cpft', 'cpft_7d', fmt.money2, 'funnel_kpis'); kpi('k-cpft-chg', 'cpft_7d_change', 'changeDown', 'funnel_kpis');
   kpi('k-launched', 'launched_30d', fmt.int);
 
   /* ---- Chart helpers ---- */
