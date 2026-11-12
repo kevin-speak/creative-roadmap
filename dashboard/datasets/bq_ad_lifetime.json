@@ -1,0 +1,21 @@
+{
+ "title": "Meta ads, 2026 lifetime per ad",
+ "description": "One row per Meta ad with spend in Taiwan or Hong Kong since 2026-01-01: lifetime totals in its dominant market plus the trailing 7 days.",
+ "langs": {
+  "query": "sql"
+ },
+ "edit": {
+  "via": "claude",
+  "at": "2026-11-12T09:20:44Z"
+ },
+ "source": {
+  "kind": "call",
+  "connector": "BigQuery",
+  "tool": "execute_sql_readonly",
+  "args": {
+   "projectId": "speak-v2-2a1f1",
+   "query": "WITH anchor AS (SELECT MAX(date) AS max_date FROM `speak-v2-2a1f1.analytics.meta_ads_creative_report_funnel`),\nf AS (\n  SELECT f.ad_id, f.ad_name, f.country, f.os, f.campaign_name, f.date, f.spend, f.impressions, f.clicks, f.installs, f.trial_starts, f.initial_purchases, f.checkouts_initiated, f.n_3_sec_video_views, f.ad_preview_link\n  FROM `speak-v2-2a1f1.analytics.meta_ads_creative_report_funnel` f\n  WHERE f.date >= DATE '2026-01-01' AND f.country IN ('Taiwan','Hong Kong') AND f.spend > 0\n),\nmkt AS (\n  SELECT ad_id, country FROM f GROUP BY ad_id, country\n  QUALIFY ROW_NUMBER() OVER (PARTITION BY ad_id ORDER BY SUM(spend) DESC, country) = 1\n)\nSELECT f.ad_id,\n  ANY_VALUE(f.ad_name) AS ad_name,\n  m.country AS market,\n  ANY_VALUE(f.campaign_name HAVING MAX f.spend) AS top_campaign,\n  STRING_AGG(DISTINCT f.os ORDER BY f.os) AS os_mix,\n  MIN(f.date) AS first_spend_date,\n  MAX(f.date) AS last_spend_date,\n  COUNT(DISTINCT f.date) AS active_days,\n  ROUND(SUM(f.spend),2) AS spend,\n  SUM(f.impressions) AS impressions,\n  SUM(f.clicks) AS clicks,\n  SUM(f.installs) AS installs,\n  SUM(f.checkouts_initiated) AS checkouts,\n  SUM(f.trial_starts) AS trial_starts,\n  SUM(f.initial_purchases) AS purchases,\n  SUM(f.n_3_sec_video_views) AS views_3s,\n  ROUND(SUM(IF(f.date > DATE_SUB(a.max_date, INTERVAL 7 DAY), f.spend, 0)),2) AS spend_7d,\n  SUM(IF(f.date > DATE_SUB(a.max_date, INTERVAL 7 DAY), f.trial_starts, 0)) AS trial_starts_7d,\n  ANY_VALUE(f.ad_preview_link) AS preview_link,\n  a.max_date AS data_through\nFROM f JOIN mkt m ON m.ad_id = f.ad_id AND m.country = f.country\nCROSS JOIN anchor a\nGROUP BY f.ad_id, m.country, a.max_date\nORDER BY spend DESC",
+   "timeoutMs": 120000
+  }
+ }
+}

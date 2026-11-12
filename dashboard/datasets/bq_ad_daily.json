@@ -1,0 +1,26 @@
+{
+ "title": "Selected creative, daily delivery",
+ "description": "Daily spend, impressions, clicks, installs, trial starts and purchases for the Meta ad IDs of the selected roadmap row.",
+ "langs": {
+  "query": "sql"
+ },
+ "edit": {
+  "via": "claude",
+  "at": "2026-11-12T09:20:44Z"
+ },
+ "source": {
+  "kind": "call",
+  "connector": "BigQuery",
+  "tool": "execute_sql_readonly",
+  "args": {
+   "projectId": "speak-v2-2a1f1",
+   "query": "SELECT date, country AS market, ROUND(SUM(spend), 2) AS spend, SUM(impressions) AS impressions, SUM(clicks) AS clicks, SUM(installs) AS installs, SUM(checkouts_initiated) AS checkouts, SUM(trial_starts) AS trial_starts, SUM(initial_purchases) AS purchases\nFROM `speak-v2-2a1f1.analytics.meta_ads_creative_report_funnel`\nWHERE '{{ad_ids}}' <> '' AND ad_id IN UNNEST(SPLIT('{{ad_ids}}', ',')) AND country IN ('Taiwan', 'Hong Kong') AND spend > 0\nGROUP BY date, country\nORDER BY date, country",
+   "timeoutMs": 120000
+  },
+  "rules": {
+   "ad_ids": {
+    "pattern": "^[0-9,]{0,600}$"
+   }
+  }
+ }
+}

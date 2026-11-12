@@ -1,0 +1,21 @@
+{
+ "title": "Daily Meta funnel by market, 90 days",
+ "description": "Spend, impressions, clicks, installs, trial starts and purchases per day for Taiwan and Hong Kong over the last 90 days in the funnel table.",
+ "langs": {
+  "query": "sql"
+ },
+ "edit": {
+  "via": "claude",
+  "at": "2026-11-12T09:20:44Z"
+ },
+ "source": {
+  "kind": "call",
+  "connector": "BigQuery",
+  "tool": "execute_sql_readonly",
+  "args": {
+   "projectId": "speak-v2-2a1f1",
+   "query": "SELECT date, country AS market, ROUND(SUM(spend), 2) AS spend, SUM(impressions) AS impressions, SUM(clicks) AS clicks, SUM(installs) AS installs, SUM(checkouts_initiated) AS checkouts, SUM(trial_starts) AS trial_starts, SUM(initial_purchases) AS purchases, COUNT(DISTINCT ad_id) AS active_ads\nFROM `speak-v2-2a1f1.analytics.meta_ads_creative_report_funnel`\nWHERE country IN ('Taiwan', 'Hong Kong') AND spend > 0 AND date >= DATE_SUB((SELECT MAX(date) FROM `speak-v2-2a1f1.analytics.meta_ads_creative_report_funnel`), INTERVAL 90 DAY)\nGROUP BY date, country\nORDER BY date, country",
+   "timeoutMs": 120000
+  }
+ }
+}

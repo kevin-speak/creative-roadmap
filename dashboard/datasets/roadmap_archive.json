@@ -1,0 +1,24 @@
+{
+ "title": "Roadmap: archived rows",
+ "description": "Notion roadmap rows in Archive, with their final SP score, pause reason and learnings.",
+ "langs": {
+  "query": "sql"
+ },
+ "edit": {
+  "via": "claude",
+  "at": "2026-11-12T09:20:44Z"
+ },
+ "source": {
+  "kind": "call",
+  "connector": "Notion",
+  "tool": "notion-query-data-sources",
+  "args": {
+   "data": {
+    "data_source_urls": [
+     "collection://46a9a0c5-2240-4576-8574-ce81793d224b"
+    ],
+    "query": "SELECT COUNT(*) AS n, json_group_array(json_object('url', url, 'name', \"Name\", 'ad_name', \"Ad Name\", 'status', \"Production Status\", 'sp_status', \"SP status\", 'sp', \"SP score\", 'cpft', \"CPFT\", 'ltv_cac', \"LTV/CAC\", 'spend', \"Spend to date\", 'market', \"Market\", 'format', \"Format\", 'source', \"Source\", 'category', \"Category\", 'creator', \"Creator\", 'hook_tag', \"Hook Tag\", 'feature', \"Feature\", 'persona', \"Persona\", 'priority', \"Priority\", 'watch', \"Watch flag\", 'pause_reason', \"Pause reason\", 'hit', \"Hit ad\", 'ad_ids', \"Meta ad ID(s)\", 'launch', \"date:Launch date:start\", 'paused', \"date:Paused date:start\", 'prod_date', \"date:Production Date:start\", 'synced', \"date:Last synced:start\", 'created', substr(\"Created time\", 1, 10), 'edited', substr(\"Last edited time\", 1, 10), 'learnings', \"Learnings\", 'hook', \"Hook\", 'parent', \"Parent creative\", 'reference', \"Reference\")) AS rows_json FROM \"collection://46a9a0c5-2240-4576-8574-ce81793d224b\" WHERE \"Production Status\" = 'Archive'"
+   }
+  }
+ }
+}

@@ -1,0 +1,1099 @@
+<meta name="dash-one-writer">
+<style>
+  .cr-page { font-family: var(--font-anthropic-sans); color: var(--color-fg); font-variant-numeric: tabular-nums; container-type: inline-size; }
+  .cr-page [hidden] { display: none !important; }
+  .cr-head { display: flex; flex-direction: column; gap: var(--cds-gap-sm); margin-bottom: var(--cds-gap-lg); }
+  .cr-title { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: 0; }
+  .cr-lede { margin: 0; max-width: 70ch; color: var(--color-fg); font-size: var(--cds-font-size-body); line-height: 1.5; }
+  .cr-lede b { font-weight: var(--cds-font-weight-medium); }
+  .cr-muted { color: var(--color-fg-muted); }
+  .cr-small { font-size: var(--cds-font-size-caption); }
+  .cr-tabs { display: flex; flex-wrap: wrap; gap: var(--cds-gap-xs); border-bottom: 1px solid var(--color-border-line); padding-bottom: 0; }
+  .cr-tab-btn { background: none; border: 0; border-bottom: 2px solid transparent; color: var(--color-fg-muted); font: inherit; font-size: var(--cds-font-size-body); padding: var(--cds-pad-sm) var(--cds-pad-md); cursor: pointer; }
+  .cr-tab-btn:hover { color: var(--color-fg); }
+  .cr-tab-btn:focus-visible { outline: 2px solid var(--color-fg); outline-offset: -2px; }
+  .cr-tab-btn[aria-selected="true"] { color: var(--color-fg); border-bottom-color: var(--color-fg); font-weight: var(--cds-font-weight-medium); }
+  .cr-section { display: flex; flex-direction: column; gap: var(--cds-gap-lg); }
+  .cr-h2 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0; }
+  .cr-h3 { font-size: var(--cds-font-size-body); font-weight: var(--cds-font-weight-medium); margin: 0; }
+  .cr-block { display: flex; flex-direction: column; gap: var(--cds-gap-sm); min-width: 0; }
+  .cr-grid { display: grid; gap: var(--cds-gap-md); grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  @container (max-width: 760px) { .cr-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .cr-two { display: grid; gap: var(--cds-gap-lg); grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  .cr-card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); min-width: 0; display: flex; flex-direction: column; gap: var(--cds-gap-xs); }
+  .cr-card .cr-label { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); text-transform: uppercase; letter-spacing: .04em; }
+  .cr-card .cr-num { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: 28px; line-height: 1.1; }
+  .cr-card .cr-sub { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .cr-up { color: var(--color-ok); } .cr-down { color: var(--color-bad); } .cr-flat { color: var(--color-fg-muted); }
+  .cr-chart { position: relative; min-height: 220px; width: 100%; }
+  .cr-chart svg { width: 100%; height: auto; display: block; }
+  .cr-chart .tick text, .cr-axis text, .cr-chart text.cr-axis { fill: var(--cds-text-secondary); font-size: var(--cds-font-size-caption); font-family: var(--font-anthropic-sans); }
+  .cr-chart .tick line, .cr-chart .domain { stroke: var(--cds-chart-axis); }
+  .cr-chart .cr-grid-line { stroke: var(--cds-chart-grid); }
+  .cr-tip { position: absolute; pointer-events: none; background: var(--cds-surface-popover); border: 1px solid var(--cds-border); box-shadow: var(--cds-shadow-popover); border-radius: var(--cds-radius); padding: var(--cds-pad-sm) var(--cds-pad-md); font-size: var(--cds-font-size-caption); color: var(--color-fg); white-space: nowrap; z-index: 2; }
+  .cr-legend { display: flex; flex-wrap: wrap; gap: var(--cds-gap-md); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .cr-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+  .cr-filters { display: flex; flex-wrap: wrap; gap: var(--cds-gap-sm); align-items: center; }
+  .cr-filters label { display: flex; flex-direction: column; gap: 2px; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); min-width: 0; }
+  .cr-input { font: inherit; font-size: var(--cds-font-size-body); color: var(--color-fg); background-color: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: 6px 10px; min-width: 160px; }
+  .cr-input:focus-visible { outline: 2px solid var(--color-fg); outline-offset: 1px; }
+  .cr-check { display: flex; flex-direction: row !important; align-items: center; gap: 6px !important; color: var(--color-fg) !important; padding-top: 14px; }
+  .cr-btn { font: inherit; font-size: var(--cds-font-size-caption); color: var(--color-fg); background-color: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: 4px 10px; cursor: pointer; }
+  .cr-btn:hover { border-color: var(--color-fg-muted); }
+  .cr-btn:focus-visible { outline: 2px solid var(--color-fg); outline-offset: 1px; }
+  .cr-tablewrap { overflow-x: auto; border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); background: var(--color-panel); }
+  .cr-table { border-collapse: collapse; width: 100%; font-size: var(--cds-font-size-caption); }
+  .cr-table th, .cr-table td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--color-border-line); white-space: nowrap; vertical-align: top; }
+  .cr-table th { color: var(--color-fg-muted); font-weight: var(--cds-font-weight-medium); cursor: pointer; user-select: none; position: sticky; top: 0; background: var(--color-panel); }
+  .cr-table th[aria-sort="ascending"]::after { content: " ↑"; } .cr-table th[aria-sort="descending"]::after { content: " ↓"; }
+  .cr-table td.cr-n, .cr-table th.cr-n { text-align: right; }
+  .cr-table td.cr-name { white-space: normal; min-width: 220px; max-width: 420px; }
+  .cr-table tbody tr { cursor: pointer; }
+  .cr-table tbody tr:hover td { background: var(--color-bg); }
+  .cr-table tbody tr.cr-selected td { background: var(--color-bg); box-shadow: inset 3px 0 0 var(--color-fg); }
+  .cr-table td.cr-wrap { white-space: normal; min-width: 280px; max-width: 560px; }
+  .cr-chip { display: inline-block; border-radius: 999px; padding: 1px 8px; font-size: var(--cds-font-size-caption); border: 1px solid var(--color-border-line); color: var(--color-fg); background: var(--color-bg); line-height: 1.6; white-space: nowrap; }
+  .cr-chip.ok { border-color: var(--color-ok); color: var(--color-ok); }
+  .cr-chip.warn { border-color: var(--color-warn); color: var(--color-warn); }
+  .cr-chip.bad { border-color: var(--color-bad); color: var(--color-bad); }
+  .cr-chip.muted { color: var(--color-fg-muted); }
+  .cr-chip.strong { background: var(--color-ok); border-color: var(--color-ok); color: var(--color-bg); }
+  .cr-detail { border: 1px solid var(--color-fg-muted); }
+  .cr-detail-head { display: flex; justify-content: space-between; gap: var(--cds-gap-md); align-items: flex-start; flex-wrap: wrap; }
+  .cr-detail-title { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-heading); margin: 0; }
+  .cr-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .cr-dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; font-size: var(--cds-font-size-caption); margin: 0; }
+  .cr-dl dt { color: var(--color-fg-muted); } .cr-dl dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+  .cr-kv { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: var(--cds-gap-sm); }
+  .cr-kv div { display: flex; flex-direction: column; gap: 2px; }
+  .cr-kv .cr-label { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .cr-kv .cr-val { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); }
+  .cr-note { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin: 0; }
+  .cr-link { color: inherit; }
+  .cr-empty { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); padding: var(--cds-pad-md); }
+  .cr-learn { display: flex; flex-direction: column; gap: var(--cds-gap-sm); }
+  .cr-learn-item { border-bottom: 1px solid var(--color-border-line); padding-bottom: var(--cds-pad-sm); display: flex; flex-direction: column; gap: 4px; }
+  .cr-learn-item .cr-learn-text { white-space: pre-wrap; overflow-wrap: anywhere; font-size: var(--cds-font-size-body); }
+  .cr-count { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  [data-dash-source-state=refreshing] { opacity: .6; }
+  details.cr-defs summary { cursor: pointer; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+  details.cr-defs ul { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin: 6px 0 0; padding-left: 18px; }
+</style>
+
+<div class="cr-page">
+  <header class="cr-head">
+    <h1 class="cr-title" id="page-title">Creative Roadmap &amp; Performance</h1>
+    <p class="cr-lede" id="lede">Funnel data through <b data-draw="lede-through" data-source="kpis" data-field="data_through" data-row="0">—</b>:
+      <b data-draw="lede-onair" data-source="kpis" data-field="on_air" data-row="0">—</b> creatives are on air
+      (<b data-draw="lede-hit" data-source="kpis" data-field="p2_hit_live" data-row="0">—</b> P2 Hit Ads),
+      <b data-draw="lede-rtt" data-source="kpis" data-field="ready_to_test" data-row="0">—</b> are ready to test, and
+      <b data-draw="lede-noreason" data-source="kpis" data-field="pause_no_reason" data-row="0">—</b> paused rows still need a pause reason.
+      In the last 7 funnel days TW + HK spent <b data-draw="lede-spend" data-source="kpis" data-field="spend_7d" data-row="0">—</b>
+      for <b data-draw="lede-trials" data-source="kpis" data-field="trials_7d" data-row="0">—</b> trial starts,
+      a CPFT of <b data-draw="lede-cpft" data-source="kpis" data-field="cpft_7d" data-row="0">—</b>
+      (<b data-draw="lede-cpft-chg" data-source="kpis" data-field="cpft_7d_change" data-row="0">—</b> vs the 7 days before).</p>
+    <nav class="cr-tabs" aria-label="Sections">
+      <button class="cr-tab-btn" type="button" data-tab="overview" aria-selected="true">Overview</button>
+      <button class="cr-tab-btn" type="button" data-tab="roadmap" aria-selected="false">Roadmap</button>
+      <button class="cr-tab-btn" type="button" data-tab="performance" aria-selected="false">Performance</button>
+      <button class="cr-tab-btn" type="button" data-tab="insights" aria-selected="false">Insights</button>
+      <button class="cr-tab-btn" type="button" data-tab="learnings" aria-selected="false">Learnings</button>
+    </nav>
+  </header>
+
+  <!-- Selected creative -->
+  <section id="detail" class="cr-card cr-detail cr-section" hidden aria-label="Selected creative">
+    <div class="cr-detail-head">
+      <div class="cr-block">
+        <h2 class="cr-detail-title" data-draw="d-name" data-source="roadmap_rows" data-field="name">—</h2>
+        <div class="cr-chips" data-draw="d-chips" data-source="roadmap_rows"></div>
+      </div>
+      <div class="cr-chips">
+        <a class="cr-btn" data-draw="d-notion" href="#detail">—</a>
+        <a class="cr-btn" data-draw="d-preview" href="#detail">—</a>
+        <button class="cr-btn" type="button" id="d-close">Close</button>
+      </div>
+    </div>
+    <div class="cr-two">
+      <div class="cr-block">
+        <h3 class="cr-h3">Roadmap record</h3>
+        <dl class="cr-dl" data-draw="d-meta" data-source="roadmap_rows"></dl>
+        <h3 class="cr-h3">Hook</h3>
+        <p class="cr-learn-text cr-small" data-draw="d-hook" data-source="roadmap_rows" data-field="hook">—</p>
+        <h3 class="cr-h3">Learnings</h3>
+        <p class="cr-learn-text cr-small" data-draw="d-learnings" data-source="roadmap_rows" data-field="learnings">—</p>
+      </div>
+      <div class="cr-block">
+        <h3 class="cr-h3">Meta delivery, lifetime of the bound ad IDs</h3>
+        <div class="cr-kv" data-source="ad_lifetime">
+          <div><span class="cr-label">Spend</span><span class="cr-val" data-draw="d-spend" data-source="ad_lifetime" data-field="spend" data-row="0">—</span></div>
+          <div><span class="cr-label">Impressions</span><span class="cr-val" data-draw="d-imp" data-source="ad_lifetime" data-field="impressions" data-row="0">—</span></div>
+          <div><span class="cr-label">CTR</span><span class="cr-val" data-draw="d-ctr" data-source="ad_lifetime" data-field="ctr" data-row="0">—</span></div>
+          <div><span class="cr-label">Installs</span><span class="cr-val" data-draw="d-inst" data-source="ad_lifetime" data-field="installs" data-row="0">—</span></div>
+          <div><span class="cr-label">CPI</span><span class="cr-val" data-draw="d-cpi" data-source="ad_lifetime" data-field="cpi" data-row="0">—</span></div>
+          <div><span class="cr-label">Trial starts</span><span class="cr-val" data-draw="d-trials" data-source="ad_lifetime" data-field="trial_starts" data-row="0">—</span></div>
+          <div><span class="cr-label">CPFT</span><span class="cr-val" data-draw="d-cpft" data-source="ad_lifetime" data-field="cpft" data-row="0">—</span></div>
+          <div><span class="cr-label">Purchases</span><span class="cr-val" data-draw="d-purch" data-source="ad_lifetime" data-field="purchases" data-row="0">—</span></div>
+          <div><span class="cr-label">Active days</span><span class="cr-val" data-draw="d-days" data-source="ad_lifetime" data-field="active_days" data-row="0">—</span></div>
+        </div>
+        <h3 class="cr-h3">Daily spend and trial starts</h3>
+        <div class="cr-chart" data-draw="d-chart" data-source="bq_ad_daily" id="detail-chart">—</div>
+        <p class="cr-note">Bars are spend per day; the line is trial starts. Both markets combined, every ad ID bound to this row.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Overview -->
+  <section id="overview" class="cr-section" data-tabpanel>
+    <div class="cr-grid" data-source="kpis">
+      <div class="cr-card"><span class="cr-label">On air</span><span class="cr-num dash-skeleton" data-draw="k-onair" data-source="kpis" data-field="on_air" data-row="0">—</span><span class="cr-sub"><span data-draw="k-onair-tw" data-source="kpis" data-field="on_air_tw" data-row="0">—</span> TW · <span data-draw="k-onair-hk" data-source="kpis" data-field="on_air_hk" data-row="0">—</span> HK</span></div>
+      <div class="cr-card"><span class="cr-label">Winners on air</span><span class="cr-num dash-skeleton" data-draw="k-win" data-source="kpis" data-field="winners_live" data-row="0">—</span><span class="cr-sub">SP ≥ 2 of <span data-draw="k-scored" data-source="kpis" data-field="scored_live" data-row="0">—</span> scored</span></div>
+      <div class="cr-card"><span class="cr-label">Ready to test</span><span class="cr-num dash-skeleton" data-draw="k-rtt" data-source="kpis" data-field="ready_to_test" data-row="0">—</span><span class="cr-sub"><span data-draw="k-prod" data-source="kpis" data-field="in_production" data-row="0">—</span> in production · <span data-draw="k-plan" data-source="kpis" data-field="plan" data-row="0">—</span> planned</span></div>
+      <div class="cr-card"><span class="cr-label">Needs attention</span><span class="cr-num dash-skeleton" data-draw="k-noreason" data-source="kpis" data-field="pause_no_reason" data-row="0">—</span><span class="cr-sub">paused, no reason · <span data-draw="k-watch" data-source="kpis" data-field="watch_list" data-row="0">—</span> on watch list</span></div>
+      <div class="cr-card"><span class="cr-label">Spend, last 7 days</span><span class="cr-num dash-skeleton" data-draw="k-spend" data-source="kpis" data-field="spend_7d" data-row="0">—</span><span class="cr-sub"><span data-draw="k-spend-chg" data-source="kpis" data-field="spend_7d_change" data-row="0">—</span> vs prior 7 · TW <span data-draw="k-spend-tw" data-source="kpis" data-field="spend_7d_tw" data-row="0">—</span></span></div>
+      <div class="cr-card"><span class="cr-label">Trial starts, last 7 days</span><span class="cr-num dash-skeleton" data-draw="k-trials" data-source="kpis" data-field="trials_7d" data-row="0">—</span><span class="cr-sub"><span data-draw="k-trials-chg" data-source="kpis" data-field="trials_7d_change" data-row="0">—</span> vs prior 7</span></div>
+      <div class="cr-card"><span class="cr-label">CPFT, last 7 days</span><span class="cr-num dash-skeleton" data-draw="k-cpft" data-source="kpis" data-field="cpft_7d" data-row="0">—</span><span class="cr-sub"><span data-draw="k-cpft-chg" data-source="kpis" data-field="cpft_7d_change" data-row="0">—</span> vs prior 7 · TW target ≤ $58</span></div>
+      <div class="cr-card"><span class="cr-label">Launched, last 30 days</span><span class="cr-num dash-skeleton" data-draw="k-launched" data-source="kpis" data-field="launched_30d" data-row="0">—</span><span class="cr-sub">roadmap rows with a launch date</span></div>
+    </div>
+
+    <div class="cr-two">
+      <div class="cr-block" id="chart-spend-block">
+        <h2 class="cr-h2">Daily spend by market, last 90 days</h2>
+        <div class="cr-legend" data-draw="legend-market"></div>
+        <div class="cr-chart" data-draw="chart-spend" data-source="bq_daily_market" id="chart-spend">—</div>
+      </div>
+      <div class="cr-block" id="chart-trials-block">
+        <h2 class="cr-h2">Daily trial starts by market, last 90 days</h2>
+        <div class="cr-legend" data-draw="legend-market"></div>
+        <div class="cr-chart" data-draw="chart-trials" data-source="bq_daily_market" id="chart-trials">—</div>
+      </div>
+    </div>
+
+    <div class="cr-two">
+      <div class="cr-block" id="pipeline-block">
+        <h2 class="cr-h2">Pipeline by production status</h2>
+        <p class="cr-note">Every row on the roadmap, counted by where it sits today.</p>
+        <div class="cr-chart" data-draw="chart-pipeline" data-source="pipeline_counts" id="chart-pipeline" style="min-height: 200px">—</div>
+      </div>
+      <div class="cr-block" id="spmix-block">
+        <h2 class="cr-h2">SP status of creatives on air</h2>
+        <p class="cr-note">P2 Hit Ad = SP ≥ 2, 10+ trials, CPFT ≤ $58 (TW). Testing = not yet 10 installs.</p>
+        <div class="cr-chart" data-draw="chart-spmix" data-source="sp_mix" id="chart-spmix" style="min-height: 200px">—</div>
+      </div>
+    </div>
+
+    <div class="cr-block" id="launch-block">
+      <h2 class="cr-h2">Launches per week and how many won</h2>
+      <p class="cr-note">Roadmap rows by launch week (Monday start), last 16 weeks. A win is SP ≥ 2; rows without an SP score yet are counted as launched only.</p>
+      <div class="cr-legend" data-draw="legend-launch"></div>
+      <div class="cr-chart" data-draw="chart-launches" data-source="launch_weeks" id="chart-launches">—</div>
+    </div>
+
+    <details class="cr-defs" id="definitions">
+      <summary>How the numbers are defined</summary>
+      <ul>
+        <li>Roadmap counts and SP figures come from the Notion “(Beta) TW Creative Roadmap” database, refreshed nightly by the sync routine.</li>
+        <li>Spend, impressions, clicks, installs and trial starts come from the BigQuery Meta funnel table (Taiwan + Hong Kong), which lags about two days; “last 7 days” means the last 7 dates in that table.</li>
+        <li>CPFT = spend ÷ trial starts. CPI = spend ÷ installs. CTR = clicks ÷ impressions. Win rate = rows with SP ≥ 2 ÷ rows with any SP score.</li>
+        <li>Days live = launch date to paused date (or to today while on air).</li>
+      </ul>
+    </details>
+  </section>
+
+  <!-- Roadmap -->
+  <section id="roadmap" class="cr-section" data-tabpanel hidden>
+    <h2 class="cr-h2">Roadmap</h2>
+    <div class="cr-filters" id="roadmap-filters">
+      <label>Search<input class="cr-input" id="rm-search" type="search" placeholder="Name, ad name, creator, hook…"></label>
+      <label>Status<select class="dash-select" id="rm-status"><option value="">All statuses</option><option value="live">Live (On Air + Pause)</option><option value="On Air">On Air</option><option value="Pause">Pause</option><option value="Ready-to-Test">Ready-to-Test</option><option value="Production">Production</option><option value="Plan">Plan</option><option value="Archive">Archive</option></select></label>
+      <label>Market<select class="dash-select" id="rm-market"><option value="">TW + HK</option><option value="TW">TW</option><option value="HK">HK</option></select></label>
+      <label>SP status<select class="dash-select" id="rm-sp"><option value="">Any</option><option value="P2 Hit Ad">P2 Hit Ad</option><option value="P1 Winner">P1 Winner</option><option value="Mid-tier">Mid-tier</option><option value="P2 Loser">P2 Loser</option><option value="Pause">Pause</option><option value="Testing">Testing</option><option value="none">No SP status</option></select></label>
+      <label>Source<select class="dash-select" id="rm-source" data-draw="opt-source" data-source="roadmap_rows"></select></label>
+      <label>Format<select class="dash-select" id="rm-format" data-draw="opt-format" data-source="roadmap_rows"></select></label>
+      <label>Category<select class="dash-select" id="rm-category" data-draw="opt-category" data-source="roadmap_rows"></select></label>
+      <label class="cr-check"><input type="checkbox" id="rm-hit"> Hit ads only</label>
+      <button class="cr-btn" type="button" id="rm-reset">Reset</button>
+    </div>
+    <p class="cr-count"><span data-draw="rm-count">—</span> rows · click a column to sort, a row to open it</p>
+    <div class="cr-tablewrap">
+      <table class="cr-table" id="roadmap-table" data-source="roadmap_rows" data-row-key="url">
+        <thead><tr>
+          <th data-field="name" data-sort="name">Creative</th>
+          <th data-field="status" data-sort="status">Status</th>
+          <th data-field="market" data-sort="market">Mkt</th>
+          <th data-field="sp_status" data-sort="sp_status">SP status</th>
+          <th class="cr-n" data-field="sp" data-sort="sp">SP</th>
+          <th class="cr-n" data-field="cpft" data-sort="cpft">CPFT</th>
+          <th class="cr-n" data-field="ltv_cac" data-sort="ltv_cac">LTV/CAC</th>
+          <th class="cr-n" data-field="spend" data-sort="spend">Spend</th>
+          <th data-field="launch" data-sort="launch">Launch</th>
+          <th class="cr-n" data-field="days_live" data-sort="days_live">Days</th>
+          <th data-field="watch" data-sort="watch">Watch</th>
+          <th data-field="pause_reason" data-sort="pause_reason">Pause reason</th>
+          <th data-field="source" data-sort="source">Source</th>
+          <th data-field="format" data-sort="format">Format</th>
+          <th data-field="category" data-sort="category">Category</th>
+          <th data-field="creator" data-sort="creator">Creator</th>
+        </tr></thead>
+        <tbody data-draw="rm-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Performance -->
+  <section id="performance" class="cr-section" data-tabpanel hidden>
+    <h2 class="cr-h2">Ad performance, 2026 to date</h2>
+    <p class="cr-note">Every Meta ad with spend in Taiwan or Hong Kong this year, scored in the market where it spent most, joined to the roadmap by ad ID. Rows without a roadmap link are ads the roadmap has not bound yet.</p>
+    <div class="cr-filters" id="perf-filters">
+      <label>Search<input class="cr-input" id="pf-search" type="search" placeholder="Creative, ad name, campaign…"></label>
+      <label>Market<select class="dash-select" id="pf-market"><option value="">TW + HK</option><option value="TW">TW</option><option value="HK">HK</option></select></label>
+      <label>Roadmap<select class="dash-select" id="pf-roadmap"><option value="">All ads</option><option value="on">On the roadmap</option><option value="off">Not on the roadmap</option></select></label>
+      <label>Delivery<select class="dash-select" id="pf-active"><option value="">Any time</option><option value="7d">Spent in last 7 days</option></select></label>
+      <label>Min spend<select class="dash-select" id="pf-minspend"><option value="0">Any</option><option value="100">$100+</option><option value="500">$500+</option><option value="2000">$2,000+</option></select></label>
+      <button class="cr-btn" type="button" id="pf-reset">Reset</button>
+    </div>
+    <p class="cr-count"><span data-draw="pf-count">—</span> ads · <span data-draw="pf-sum-spend" data-source="perf_rows">—</span> total spend in view</p>
+    <div class="cr-tablewrap">
+      <table class="cr-table" id="perf-table" data-source="perf_rows" data-row-key="ad_id">
+        <thead><tr>
+          <th data-field="name" data-sort="name">Creative</th>
+          <th data-field="market" data-sort="market">Mkt</th>
+          <th data-field="status" data-sort="status">Roadmap</th>
+          <th data-field="sp_status" data-sort="sp_status">SP status</th>
+          <th class="cr-n" data-field="sp" data-sort="sp">SP</th>
+          <th class="cr-n" data-field="spend" data-sort="spend">Spend</th>
+          <th class="cr-n" data-field="spend_7d" data-sort="spend_7d">Spend 7d</th>
+          <th class="cr-n" data-field="impressions" data-sort="impressions">Impr.</th>
+          <th class="cr-n" data-field="ctr" data-sort="ctr">CTR</th>
+          <th class="cr-n" data-field="installs" data-sort="installs">Installs</th>
+          <th class="cr-n" data-field="cpi" data-sort="cpi">CPI</th>
+          <th class="cr-n" data-field="trial_starts" data-sort="trial_starts">Trials</th>
+          <th class="cr-n" data-field="cpft" data-sort="cpft">CPFT</th>
+          <th class="cr-n" data-field="purchases" data-sort="purchases">Purch.</th>
+          <th data-field="first_spend" data-sort="first_spend">First spend</th>
+          <th data-field="last_spend" data-sort="last_spend">Last spend</th>
+          <th data-field="campaign" data-sort="campaign">Top campaign</th>
+        </tr></thead>
+        <tbody data-draw="pf-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Insights -->
+  <section id="insights" class="cr-section" data-tabpanel hidden>
+    <h2 class="cr-h2">What wins</h2>
+    <p class="cr-note">Launched roadmap rows grouped by a creative attribute. Win rate = SP ≥ 2 among rows that have an SP score. Rows tagged with several creators or hook tags count once per tag.</p>
+    <div class="cr-filters">
+      <label>Group by<select class="dash-select" id="wd-dim"><option value="category">Category</option><option value="format">Format</option><option value="source">Source</option><option value="creator">Creator</option><option value="hook_tag">Hook tag</option><option value="feature">Feature</option><option value="persona">Persona</option><option value="market">Market</option><option value="priority">Priority</option></select></label>
+      <label>Min scored rows<select class="dash-select" id="wd-min"><option value="1">1+</option><option value="3" selected>3+</option><option value="5">5+</option></select></label>
+    </div>
+    <div class="cr-two">
+      <div class="cr-block">
+        <h3 class="cr-h3">Win rate by group</h3>
+        <div class="cr-chart" data-draw="chart-windim" data-source="win_by_dim" id="chart-windim" style="min-height: 240px">—</div>
+      </div>
+      <div class="cr-block">
+        <h3 class="cr-h3">Group detail</h3>
+        <div class="cr-tablewrap">
+          <table class="cr-table" id="windim-table" data-source="win_by_dim" data-row-key="dim,value">
+            <thead><tr>
+              <th data-field="value" data-sort="value">Group</th>
+              <th class="cr-n" data-field="n" data-sort="n">Launched</th>
+              <th class="cr-n" data-field="scored" data-sort="scored">Scored</th>
+              <th class="cr-n" data-field="wins" data-sort="wins">Wins</th>
+              <th class="cr-n" data-field="win_rate" data-sort="win_rate">Win rate</th>
+              <th class="cr-n" data-field="avg_sp" data-sort="avg_sp">Avg SP</th>
+              <th class="cr-n" data-field="hit_ads" data-sort="hit_ads">Hit ads</th>
+              <th class="cr-n" data-field="spend" data-sort="spend">Spend</th>
+            </tr></thead>
+            <tbody data-draw="wd-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="cr-two">
+      <div class="cr-block">
+        <h3 class="cr-h3">Why creatives were paused</h3>
+        <p class="cr-note">Paused and archived rows by pause reason. “Not filled” is what the Monday routine nags about.</p>
+        <div class="cr-chart" data-draw="chart-pause" data-source="pause_reasons" id="chart-pause" style="min-height: 200px">—</div>
+      </div>
+      <div class="cr-block">
+        <h3 class="cr-h3">Top winners by SP score</h3>
+        <p class="cr-note">Highest SP scores on the roadmap, any status.</p>
+        <div class="cr-tablewrap">
+          <table class="cr-table" id="top-table" data-source="roadmap_rows" data-row-key="url">
+            <thead><tr>
+              <th data-field="name">Creative</th>
+              <th data-field="status">Status</th>
+              <th data-field="market">Mkt</th>
+              <th class="cr-n" data-field="sp">SP</th>
+              <th class="cr-n" data-field="cpft">CPFT</th>
+              <th class="cr-n" data-field="spend">Spend</th>
+            </tr></thead>
+            <tbody data-draw="top-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Learnings -->
+  <section id="learnings" class="cr-section" data-tabpanel hidden>
+    <h2 class="cr-h2">Learnings</h2>
+    <p class="cr-note">Every roadmap row with a Learnings note, newest edit first. These feed the Monday iteration briefs.</p>
+    <div class="cr-filters">
+      <label>Search<input class="cr-input" id="ln-search" type="search" placeholder="Search learnings…"></label>
+      <label>Market<select class="dash-select" id="ln-market"><option value="">TW + HK</option><option value="TW">TW</option><option value="HK">HK</option></select></label>
+      <label>Outcome<select class="dash-select" id="ln-outcome"><option value="">Any</option><option value="win">Winners (SP ≥ 2)</option><option value="lose">Below 2 or unscored</option></select></label>
+    </div>
+    <p class="cr-count"><span data-draw="ln-count">—</span> notes</p>
+    <div class="cr-learn" data-draw="ln-list" data-source="learnings_rows"></div>
+  </section>
+</div>
+
+<script>
+/* ---------- Loaders: turn each connector's answer into rows ---------- */
+(function () {
+  const notionJson = ({ answer }) => {
+    if (answer && answer.error) throw new Error(typeof answer.error === 'string' ? answer.error : (answer.error.message || 'Notion query failed'));
+    const results = Array.isArray(answer) ? answer : (answer && answer.results) || [];
+    const cell = results.length ? results[0].rows_json : null;
+    if (cell == null) return [];
+    const rows = typeof cell === 'string' ? JSON.parse(cell) : cell;
+    return Array.isArray(rows) ? rows : [];
+  };
+  for (const id of ['roadmap_pipeline', 'roadmap_live', 'roadmap_archive']) {
+    dash.loader(id, { description: 'The query packs every row into one JSON array (rows_json); this unpacks it into one row per Notion page.', fn: notionJson });
+  }
+  const bq = ({ answer, read }) => read.bigquery(answer);
+  for (const id of ['bq_ad_lifetime', 'bq_daily_market', 'bq_ad_daily']) {
+    dash.loader(id, { description: 'Reads the BigQuery result rows with their column types.', fn: bq });
+  }
+})();
+
+/* ---------- Calculations ---------- */
+dash.calc('roadmap_rows', {
+  title: 'Roadmap rows, normalized',
+  description: 'The three roadmap queries joined back into one list, with numbers typed, Meta ad IDs extracted, markets shortened and days live worked out.',
+  inputs: ['roadmap_pipeline', 'roadmap_live', 'roadmap_archive'],
+  fn: (pipeline, live, archive) => {
+    const all = [].concat(pipeline || [], live || [], archive || []);
+    const num = (v) => (v === null || v === undefined || v === '' || !isFinite(+v)) ? null : +v;
+    const list = (v) => { if (!v) return ''; try { const a = JSON.parse(v); return Array.isArray(a) ? a.join(', ') : String(v); } catch (e) { return String(v); } };
+    const today = new Date().toISOString().slice(0, 10);
+    const daysBetween = (a, b) => (a && b) ? Math.max(0, Math.round((Date.parse(b) - Date.parse(a)) / 86400000)) : null;
+    return all.map((r) => {
+      const ids = [...new Set(String(r.ad_ids || '').match(/\d{15,}/g) || [])];
+      const sp = num(r.sp);
+      const status = r.status || 'No status';
+      const ended = (status === 'Pause' || status === 'Archive') ? (r.paused || today) : today;
+      return {
+        url: r.url, name: r.name || '(untitled)', ad_name: r.ad_name || '', status,
+        sp_status: r.sp_status || '', sp, cpft: num(r.cpft), ltv_cac: num(r.ltv_cac), spend: num(r.spend),
+        market: r.market ? String(r.market).slice(0, 2) : '', format: r.format || '', source: r.source || '',
+        category: r.category || '', creator: list(r.creator), hook_tag: list(r.hook_tag), feature: r.feature || '',
+        persona: r.persona || '', priority: r.priority || '', watch: r.watch || '', pause_reason: r.pause_reason || '',
+        hit: r.hit === '__YES__', ad_ids: ids.join(','), ad_count: ids.length,
+        launch: r.launch || '', paused: r.paused || '', prod_date: r.prod_date || '', synced: r.synced || '',
+        created: String(r.created || '').slice(0, 10), edited: String(r.edited || '').slice(0, 10),
+        days_live: r.launch ? daysBetween(r.launch, ended) : null,
+        verdict: sp == null ? '' : (sp >= 2 ? 'Win' : (sp >= 1.5 ? 'Mid' : 'Below')),
+        learnings: r.learnings || '', hook: r.hook || '', parent: list(r.parent), reference: r.reference || ''
+      };
+    });
+  }
+});
+
+dash.calc('kpis', {
+  title: 'Headline figures',
+  description: 'Counts from the roadmap plus the last two 7-day windows of the daily market funnel.',
+  inputs: ['roadmap_rows', 'bq_daily_market'],
+  fn: (roadmap, daily) => {
+    const sum = (rows, f) => rows.reduce((s, r) => s + (+r[f] || 0), 0);
+    const dates = [...new Set(daily.map((d) => String(d.date)))].sort();
+    const through = dates[dates.length - 1] || '';
+    const last7 = new Set(dates.slice(-7)), prev7 = new Set(dates.slice(-14, -7));
+    const cur = daily.filter((d) => last7.has(String(d.date))), prev = daily.filter((d) => prev7.has(String(d.date)));
+    const spend7 = sum(cur, 'spend'), spendP = sum(prev, 'spend');
+    const trials7 = sum(cur, 'trial_starts'), trialsP = sum(prev, 'trial_starts');
+    const cpft7 = trials7 ? spend7 / trials7 : null, cpftP = trialsP ? spendP / trialsP : null;
+    const change = (a, b) => (a != null && b) ? (a - b) / b : null;
+    const live = roadmap.filter((r) => r.status === 'On Air');
+    const cutoff = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
+    return [{
+      data_through: through,
+      on_air: live.length,
+      on_air_tw: live.filter((r) => r.market === 'TW').length,
+      on_air_hk: live.filter((r) => r.market === 'HK').length,
+      p2_hit_live: live.filter((r) => r.sp_status === 'P2 Hit Ad').length,
+      winners_live: live.filter((r) => r.sp != null && r.sp >= 2).length,
+      scored_live: live.filter((r) => r.sp != null).length,
+      ready_to_test: roadmap.filter((r) => r.status === 'Ready-to-Test').length,
+      in_production: roadmap.filter((r) => r.status === 'Production').length,
+      plan: roadmap.filter((r) => r.status === 'Plan').length,
+      pause_no_reason: roadmap.filter((r) => r.status === 'Pause' && !r.pause_reason).length,
+      watch_list: live.filter((r) => r.watch === 'Watch List').length,
+      pause_candidates: live.filter((r) => r.watch === 'Pause-candidate').length,
+      launched_30d: roadmap.filter((r) => r.launch && r.launch >= cutoff).length,
+      spend_7d: spend7, spend_prev7: spendP, spend_7d_change: change(spend7, spendP),
+      spend_7d_tw: sum(cur.filter((d) => d.market === 'Taiwan'), 'spend'),
+      spend_7d_hk: sum(cur.filter((d) => d.market === 'Hong Kong'), 'spend'),
+      trials_7d: trials7, trials_prev7: trialsP, trials_7d_change: change(trials7, trialsP),
+      cpft_7d: cpft7, cpft_prev7: cpftP, cpft_7d_change: change(cpft7, cpftP)
+    }];
+  }
+});
+
+dash.calc('pipeline_counts', {
+  title: 'Rows per production status',
+  description: 'Roadmap rows counted by production status, in pipeline order, with TW/HK split and spend to date.',
+  inputs: ['roadmap_rows'],
+  fn: (roadmap) => {
+    const order = ['Plan', 'Production', 'Ready-to-Test', 'On Air', 'Pause', 'Archive', 'No status'];
+    return order.map((status) => {
+      const rows = roadmap.filter((r) => r.status === status);
+      return { status, count: rows.length, tw: rows.filter((r) => r.market === 'TW').length, hk: rows.filter((r) => r.market === 'HK').length,
+        spend: rows.reduce((s, r) => s + (r.spend || 0), 0) };
+    }).filter((r) => r.count > 0 || r.status !== 'No status');
+  }
+});
+
+dash.calc('sp_mix', {
+  title: 'SP status of rows on air',
+  description: 'On Air rows counted by SP status.',
+  inputs: ['roadmap_rows'],
+  fn: (roadmap) => {
+    const order = ['P2 Hit Ad', 'P1 Winner', 'Mid-tier', 'P2 Loser', 'Pause', 'Testing', 'No SP status'];
+    const live = roadmap.filter((r) => r.status === 'On Air');
+    return order.map((s) => {
+      const rows = live.filter((r) => (r.sp_status || 'No SP status') === s);
+      return { sp_status: s, count: rows.length, spend: rows.reduce((a, r) => a + (r.spend || 0), 0) };
+    });
+  }
+});
+
+dash.calc('launch_weeks', {
+  title: 'Launches per week',
+  description: 'Roadmap rows by the Monday of their launch week over the last 16 weeks: launched, scored (any SP), wins (SP ≥ 2) and P2 Hit Ads.',
+  inputs: ['roadmap_rows'],
+  fn: (roadmap) => {
+    const monday = (iso) => { const d = new Date(iso + 'T00:00:00Z'); const dow = (d.getUTCDay() + 6) % 7; d.setUTCDate(d.getUTCDate() - dow); return d.toISOString().slice(0, 10); };
+    const weeks = []; const start = monday(new Date().toISOString().slice(0, 10));
+    for (let i = 15; i >= 0; i--) { const d = new Date(start + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() - 7 * i); weeks.push(d.toISOString().slice(0, 10)); }
+    return weeks.map((week) => {
+      const rows = roadmap.filter((r) => r.launch && monday(r.launch) === week);
+      const scored = rows.filter((r) => r.sp != null);
+      const wins = scored.filter((r) => r.sp >= 2);
+      return { week, launched: rows.length, scored: scored.length, wins: wins.length, hit_ads: rows.filter((r) => r.sp_status === 'P2 Hit Ad').length,
+        win_rate: scored.length ? wins.length / scored.length : null };
+    });
+  }
+});
+
+dash.calc('win_by_dim', {
+  title: 'Win rate by creative attribute',
+  description: 'Launched roadmap rows grouped by each attribute: launched, scored (any SP), wins (SP ≥ 2), win rate, average SP, P2 Hit Ads and spend to date.',
+  inputs: ['roadmap_rows'],
+  fn: (roadmap) => {
+    const dims = ['category', 'format', 'source', 'creator', 'hook_tag', 'feature', 'persona', 'market', 'priority'];
+    const launched = roadmap.filter((r) => r.launch);
+    const out = [];
+    for (const dim of dims) {
+      const groups = new Map();
+      for (const r of launched) {
+        const values = (dim === 'creator' || dim === 'hook_tag') ? String(r[dim] || '').split(',').map((s) => s.trim()).filter(Boolean) : [r[dim] || ''];
+        for (const v of values) { const key = v || '(not set)'; if (!groups.has(key)) groups.set(key, []); groups.get(key).push(r); }
+      }
+      for (const [value, rows] of groups) {
+        const scored = rows.filter((r) => r.sp != null);
+        const wins = scored.filter((r) => r.sp >= 2);
+        out.push({ dim, value, n: rows.length, scored: scored.length, wins: wins.length,
+          win_rate: scored.length ? wins.length / scored.length : null,
+          avg_sp: scored.length ? scored.reduce((s, r) => s + r.sp, 0) / scored.length : null,
+          hit_ads: rows.filter((r) => r.sp_status === 'P2 Hit Ad').length,
+          spend: rows.reduce((s, r) => s + (r.spend || 0), 0) });
+      }
+    }
+    return out;
+  }
+});
+
+dash.calc('pause_reasons', {
+  title: 'Pause reasons',
+  description: 'Paused and archived roadmap rows counted by pause reason; an empty reason is “Not filled”.',
+  inputs: ['roadmap_rows'],
+  fn: (roadmap) => {
+    const counts = new Map();
+    for (const r of roadmap) {
+      if (r.status !== 'Pause' && r.status !== 'Archive') continue;
+      const k = r.pause_reason || 'Not filled';
+      const c = counts.get(k) || { reason: k, count: 0, paused: 0, archived: 0 };
+      c.count++; if (r.status === 'Pause') c.paused++; else c.archived++;
+      counts.set(k, c);
+    }
+    return [...counts.values()].sort((a, b) => b.count - a.count);
+  }
+});
+
+dash.calc('learnings_rows', {
+  title: 'Rows with learnings',
+  description: 'Roadmap rows that have a Learnings note, newest edit first.',
+  inputs: ['roadmap_rows'],
+  fn: (roadmap) => roadmap.filter((r) => r.learnings && r.learnings.trim()).sort((a, b) => (b.edited > a.edited ? 1 : b.edited < a.edited ? -1 : 0))
+});
+
+dash.calc('perf_rows', {
+  title: 'Ad performance joined to the roadmap',
+  description: 'One row per Meta ad from the BigQuery lifetime query, with CTR, CPI, CPFT and the roadmap row that lists its ad ID.',
+  inputs: ['bq_ad_lifetime', 'roadmap_rows'],
+  fn: (ads, roadmap) => {
+    const byId = new Map();
+    for (const r of roadmap) for (const id of String(r.ad_ids || '').split(',')) if (id) byId.set(id, r);
+    const n = (v) => (v === null || v === undefined || v === '' || !isFinite(+v)) ? 0 : +v;
+    return ads.map((a) => {
+      const r = byId.get(String(a.ad_id));
+      const spend = n(a.spend), imp = n(a.impressions), clicks = n(a.clicks), inst = n(a.installs), trials = n(a.trial_starts);
+      const spend7 = n(a.spend_7d), trials7 = n(a.trial_starts_7d);
+      return {
+        ad_id: String(a.ad_id), name: r ? r.name : String(a.ad_name || a.ad_id), ad_name: String(a.ad_name || ''), on_roadmap: !!r, url: r ? r.url : '',
+        market: a.market === 'Taiwan' ? 'TW' : (a.market === 'Hong Kong' ? 'HK' : String(a.market || '')),
+        status: r ? r.status : '', sp_status: r ? r.sp_status : '', sp: r ? r.sp : null,
+        campaign: String(a.top_campaign || ''), os_mix: String(a.os_mix || ''),
+        first_spend: String(a.first_spend_date || ''), last_spend: String(a.last_spend_date || ''), active_days: n(a.active_days),
+        spend, impressions: imp, clicks, installs: inst, checkouts: n(a.checkouts), trial_starts: trials, purchases: n(a.purchases),
+        ctr: imp ? clicks / imp : null, cpm: imp ? spend / imp * 1000 : null, cpi: inst ? spend / inst : null,
+        cpft: trials ? spend / trials : null, install_to_trial: inst ? trials / inst : null,
+        spend_7d: spend7, trial_starts_7d: trials7, cpft_7d: trials7 ? spend7 / trials7 : null,
+        preview: String(a.preview_link || ''), data_through: String(a.data_through || '')
+      };
+    });
+  }
+});
+
+dash.calc('ad_lifetime', {
+  title: 'Selected creative, lifetime totals',
+  description: 'Sums of the selected creative’s daily rows (all bound ad IDs, both markets) with CTR, CPI and CPFT.',
+  inputs: ['bq_ad_daily'],
+  fn: (daily) => {
+    const n = (v) => (v === null || v === undefined || v === '' || !isFinite(+v)) ? 0 : +v;
+    const t = { spend: 0, impressions: 0, clicks: 0, installs: 0, checkouts: 0, trial_starts: 0, purchases: 0 };
+    const days = new Set();
+    for (const d of daily) { for (const k in t) t[k] += n(d[k]); if (n(d.spend) > 0) days.add(String(d.date)); }
+    return [{ ...t, active_days: days.size, ctr: t.impressions ? t.clicks / t.impressions : null,
+      cpi: t.installs ? t.spend / t.installs : null, cpft: t.trial_starts ? t.spend / t.trial_starts : null }];
+  }
+});
+</script>
+
+<script>
+/* ---------- Page behaviour ---------- */
+(function () {
+  const $ = (sel, root) => (root || document).querySelector(sel);
+  const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
+  const fmt = {
+    money: d3.format('$,.0f'), money2: d3.format('$,.2f'), int: d3.format(',d'), pct: d3.format('.0%'), pct1: d3.format('.1%'),
+    sp: d3.format('.2f'), ratio: d3.format('.2f'), date: d3.utcFormat('%b %-d'), dateFull: d3.utcFormat('%Y-%m-%d'), month: d3.utcFormat('%b')
+  };
+  const parseDate = (s) => new Date(String(s).slice(0, 10) + 'T00:00:00Z');
+  const money = (v) => (v == null ? '—' : fmt.money(v));
+  const num = (v, f) => (v == null || v === '' || !isFinite(+v)) ? '—' : f(+v);
+  const text = (el, v) => { el.textContent = (v == null || v === '') ? '—' : String(v); };
+  const signed = (v, goodWhenUp) => {
+    if (v == null || !isFinite(v)) return { t: '—', c: 'cr-flat' };
+    const t = (v > 0 ? '+' : '') + fmt.pct(v);
+    const good = goodWhenUp ? v > 0 : v < 0;
+    return { t, c: Math.abs(v) < 0.005 ? 'cr-flat' : (good ? 'cr-up' : 'cr-down') };
+  };
+  const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---- Tabs ---- */
+  const tabs = ['overview', 'roadmap', 'performance', 'insights', 'learnings'];
+  function showTab(name) {
+    if (!tabs.includes(name)) name = 'overview';
+    for (const sec of $$('[data-tabpanel]')) sec.hidden = sec.id !== name;
+    for (const b of $$('.cr-tab-btn')) b.setAttribute('aria-selected', String(b.dataset.tab === name));
+    dash.setLink(name);
+  }
+  for (const b of $$('.cr-tab-btn')) b.addEventListener('click', () => showTab(b.dataset.tab));
+  showTab((location.hash || '').replace('#', ''));
+
+  /* ---- Selection (detail panel) ---- */
+  let selected = null; // roadmap row
+  function selectRow(row) {
+    selected = row;
+    const panel = $('#detail');
+    if (!row) { panel.hidden = true; dash.draw('rm-body'); dash.draw('pf-body'); dash.draw('top-body'); return; }
+    const ids = row.ad_ids || '';
+    if (dash.params().ad_ids !== ids) dash.setParams({ ad_ids: ids });
+    panel.hidden = false;
+    for (const name of ['d-name', 'd-chips', 'd-notion', 'd-preview', 'd-meta', 'd-hook', 'd-learnings', 'd-chart',
+      'd-spend', 'd-imp', 'd-ctr', 'd-inst', 'd-cpi', 'd-trials', 'd-cpft', 'd-purch', 'd-days']) dash.draw(name);
+    dash.draw('rm-body'); dash.draw('pf-body'); dash.draw('top-body');
+    panel.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+  }
+  $('#d-close').addEventListener('click', () => selectRow(null));
+  function selectAd(perfRow) {
+    const rm = dash.data('roadmap_rows');
+    const row = (rm.status === 'ok' && perfRow.url) ? rm.data.find((r) => r.url === perfRow.url) : null;
+    selectRow(row || { url: '', name: perfRow.name, ad_name: perfRow.ad_name, status: 'Not on roadmap', sp_status: '', sp: null, cpft: null, ltv_cac: null, spend: null,
+      market: perfRow.market, format: '', source: '', category: '', creator: '', hook_tag: '', feature: '', persona: '', priority: '', watch: '', pause_reason: '',
+      hit: false, ad_ids: perfRow.ad_id, ad_count: 1, launch: perfRow.first_spend, paused: '', learnings: '', hook: '', parent: '', reference: '', preview: perfRow.preview });
+  }
+
+  /* ---- Chips ---- */
+  const statusClass = { 'On Air': 'ok', 'Ready-to-Test': 'warn', 'Pause': 'bad', 'Plan': 'muted', 'Production': '', 'Archive': 'muted' };
+  const spClass = { 'P2 Hit Ad': 'strong', 'P1 Winner': 'ok', 'Mid-tier': 'warn', 'P2 Loser': 'bad', 'Pause': 'bad', 'Testing': 'muted' };
+  function chip(label, cls) { const s = document.createElement('span'); s.className = 'cr-chip ' + (cls || ''); s.textContent = label; return s; }
+
+  /* ---- Lede + KPI tiles ---- */
+  function kpi(name, field, format) {
+    dash.draw(name, (el) => {
+      const k = dash.data('kpis');
+      el.classList.toggle('dash-skeleton', k.status === 'loading');
+      if (k.status !== 'ok' || !k.data || !k.data.length) { el.textContent = '—'; el.classList.remove('cr-up', 'cr-down', 'cr-flat'); return; }
+      const v = k.data[0][field];
+      if (format === 'change' || format === 'changeDown') {
+        const s = signed(v, format === 'change'); el.textContent = s.t; el.classList.remove('cr-up', 'cr-down', 'cr-flat'); el.classList.add(s.c); return;
+      }
+      el.textContent = format ? num(v, format) : (v == null || v === '' ? '—' : String(v));
+    });
+  }
+  kpi('lede-through', 'data_through'); kpi('lede-onair', 'on_air', fmt.int); kpi('lede-hit', 'p2_hit_live', fmt.int); kpi('lede-rtt', 'ready_to_test', fmt.int);
+  kpi('lede-noreason', 'pause_no_reason', fmt.int); kpi('lede-spend', 'spend_7d', fmt.money); kpi('lede-trials', 'trials_7d', fmt.int);
+  kpi('lede-cpft', 'cpft_7d', fmt.money2); kpi('lede-cpft-chg', 'cpft_7d_change', 'changeDown');
+  kpi('k-onair', 'on_air', fmt.int); kpi('k-onair-tw', 'on_air_tw', fmt.int); kpi('k-onair-hk', 'on_air_hk', fmt.int);
+  kpi('k-win', 'winners_live', fmt.int); kpi('k-scored', 'scored_live', fmt.int);
+  kpi('k-rtt', 'ready_to_test', fmt.int); kpi('k-prod', 'in_production', fmt.int); kpi('k-plan', 'plan', fmt.int);
+  kpi('k-noreason', 'pause_no_reason', fmt.int); kpi('k-watch', 'watch_list', fmt.int);
+  kpi('k-spend', 'spend_7d', fmt.money); kpi('k-spend-chg', 'spend_7d_change', 'change'); kpi('k-spend-tw', 'spend_7d_tw', fmt.money);
+  kpi('k-trials', 'trials_7d', fmt.int); kpi('k-trials-chg', 'trials_7d_change', 'change');
+  kpi('k-cpft', 'cpft_7d', fmt.money2); kpi('k-cpft-chg', 'cpft_7d_change', 'changeDown');
+  kpi('k-launched', 'launched_30d', fmt.int);
+
+  /* ---- Chart helpers ---- */
+  function chartState(el, src) {
+    if (src.status === 'ok') return true;
+    el.replaceChildren();
+    const p = document.createElement('div'); p.className = 'cr-empty';
+    p.textContent = src.status === 'loading' ? 'Loading…' : src.status === 'error' ? 'Failed to load' : src.status === 'connect' ? 'Waiting for connector access' : '—';
+    el.appendChild(p);
+    return false;
+  }
+  function tooltip(el) {
+    let tip = el.querySelector('.cr-tip');
+    if (!tip) { tip = document.createElement('div'); tip.className = 'cr-tip'; tip.hidden = true; el.appendChild(tip); }
+    return {
+      show(x, y, lines) {
+        tip.replaceChildren(...lines.map((l) => { const d = document.createElement('div'); d.textContent = l; return d; }));
+        tip.hidden = false;
+        const w = el.clientWidth, tw = tip.offsetWidth;
+        tip.style.left = Math.max(0, Math.min(w - tw, x + 12)) + 'px';
+        tip.style.top = Math.max(0, y - 10) + 'px';
+      },
+      hide() { tip.hidden = true; }
+    };
+  }
+  function svgIn(el, width, height, label) {
+    el.replaceChildren();
+    const svg = d3.select(el).append('svg').attr('viewBox', `0 0 ${width} ${height}`).attr('role', 'img').attr('aria-label', label);
+    return svg;
+  }
+  function measure(svg, values, format, cls) {
+    const g = svg.append('g').attr('class', cls || 'cr-axis');
+    let w = 0;
+    for (const v of values) { const t = g.append('text').text(format(v)); w = Math.max(w, t.node().getComputedTextLength()); }
+    g.remove();
+    return w;
+  }
+
+  /* Daily line chart by market */
+  function dailyChart(el, metric, label, format) {
+    const src = dash.data('bq_daily_market');
+    if (!chartState(el, src)) return;
+    const rows = src.data.map((d) => ({ date: parseDate(d.date), market: d.market, v: +d[metric] || 0 })).filter((d) => !isNaN(d.date));
+    if (!rows.length) { chartState(el, { status: 'empty' }); return; }
+    const markets = ['Taiwan', 'Hong Kong'];
+    const series = markets.map((m) => ({ market: m, label: m === 'Taiwan' ? 'TW' : 'HK', points: rows.filter((r) => r.market === m).sort((a, b) => a.date - b.date) }));
+    const width = Math.max(280, el.clientWidth || 600), height = 240;
+    const svg = svgIn(el, width, height, `${label} per day, Taiwan vs Hong Kong, last 90 days`);
+    const y = d3.scaleLinear().domain([0, d3.max(rows, (d) => d.v) || 1]).nice().range([height - 28, 12]);
+    const ticks = y.ticks(4);
+    const left = measure(svg, ticks, format) + 10;
+    const x = d3.scaleUtc().domain(d3.extent(rows, (d) => d.date)).range([left, width - 10]);
+    svg.append('g').attr('class', 'cr-axis').selectAll('line').data(ticks).join('line').attr('class', 'cr-grid-line')
+      .attr('x1', left).attr('x2', width - 10).attr('y1', (d) => y(d)).attr('y2', (d) => y(d));
+    svg.append('g').attr('class', 'cr-axis').attr('transform', `translate(${left},0)`).call(d3.axisLeft(y).tickValues(ticks).tickFormat(format).tickSize(0)).select('.domain').remove();
+    const xt = x.ticks(Math.max(2, Math.floor((width - left) / 90)));
+    svg.append('g').attr('class', 'cr-axis').attr('transform', `translate(0,${height - 28})`).call(d3.axisBottom(x).tickValues(xt).tickFormat(fmt.date).tickSize(0).tickPadding(8)).select('.domain').remove();
+    const line = d3.line().x((d) => x(d.date)).y((d) => y(d.v));
+    series.forEach((s, i) => {
+      svg.append('path').datum(s.points).attr('fill', 'none').style('stroke', dash.colors[i]).attr('stroke-width', 1.8).attr('d', line);
+      const last = s.points[s.points.length - 1];
+      if (last) svg.append('circle').attr('cx', x(last.date)).attr('cy', y(last.v)).attr('r', 3).style('fill', dash.colors[i]);
+    });
+    const tip = tooltip(el);
+    const hover = svg.append('line').attr('class', 'cr-grid-line').attr('y1', 12).attr('y2', height - 28).style('display', 'none');
+    const bisect = d3.bisector((d) => d.date).center;
+    svg.append('rect').attr('x', left).attr('y', 0).attr('width', Math.max(1, width - left - 10)).attr('height', height).attr('fill', 'transparent')
+      .on('mousemove', (event) => {
+        const [mx, my] = d3.pointer(event); const date = x.invert(mx);
+        const lines = [fmt.dateFull(date)];
+        let px = mx;
+        series.forEach((s) => { if (!s.points.length) return; const i = bisect(s.points, date); const p = s.points[i]; px = x(p.date); lines.push(`${s.label}: ${format(p.v)}`); });
+        hover.style('display', null).attr('x1', px).attr('x2', px);
+        const box = el.getBoundingClientRect(); const scale = box.width / width;
+        tip.show(px * scale, my * scale, lines);
+      }).on('mouseleave', () => { hover.style('display', 'none'); tip.hide(); });
+  }
+  dash.draw('chart-spend', (el) => dailyChart(el, 'spend', 'Spend', fmt.money));
+  dash.draw('chart-trials', (el) => dailyChart(el, 'trial_starts', 'Trial starts', fmt.int));
+  dash.draw('legend-market', (el) => {
+    el.replaceChildren(...['TW', 'HK'].map((m, i) => { const s = document.createElement('span'); const i2 = document.createElement('i'); i2.style.background = dash.colors[i]; s.append(i2, m); return s; }));
+  });
+
+  /* Horizontal bars (pipeline, SP mix, pause reasons, win by dim) */
+  function hbars(el, src, keyField, valueField, format, opts) {
+    if (!chartState(el, src)) return;
+    let rows = (opts && opts.rows) ? opts.rows(src.data) : src.data;
+    rows = rows.filter((r) => r[valueField] != null);
+    if (!rows.length) { chartState(el, { status: 'empty' }); return; }
+    const width = Math.max(280, el.clientWidth || 500), rowH = 26, height = rows.length * rowH + 16;
+    const svg = svgIn(el, width, height, (opts && opts.label) || 'Bar chart');
+    const labelW = measure(svg, rows, (r) => String(r[keyField])) + 12;
+    const valW = measure(svg, rows, (r) => format(r[valueField])) + 10;
+    const max = d3.max(rows, (r) => +r[valueField]) || 1;
+    const x = d3.scaleLinear().domain([0, max]).range([0, Math.max(10, width - labelW - valW - 8)]);
+    const g = svg.selectAll('g.bar').data(rows).join('g').attr('class', 'bar').attr('transform', (r, i) => `translate(0,${8 + i * rowH})`);
+    g.append('text').attr('class', 'cr-axis').attr('x', labelW - 12).attr('y', rowH / 2 + 4).attr('text-anchor', 'end').text((r) => String(r[keyField]));
+    g.append('rect').attr('x', labelW).attr('y', 5).attr('height', rowH - 10).attr('rx', 2).attr('width', (r) => x(+r[valueField]))
+      .style('fill', (r, i) => (opts && opts.color) ? opts.color(r, i) : dash.colors[0]);
+    g.append('text').attr('class', 'cr-axis').attr('x', (r) => labelW + x(+r[valueField]) + 6).attr('y', rowH / 2 + 4).text((r) => format(r[valueField]));
+    if (opts && opts.detail) {
+      const tip = tooltip(el);
+      g.on('mousemove', (event, r) => { const [mx, my] = d3.pointer(event, el); tip.show(mx, my, opts.detail(r)); }).on('mouseleave', () => tip.hide());
+    }
+  }
+  dash.draw('chart-pipeline', (el) => hbars(el, dash.data('pipeline_counts'), 'status', 'count', fmt.int, {
+    label: 'Roadmap rows per production status', detail: (r) => [`${r.status}: ${r.count} rows`, `TW ${r.tw} · HK ${r.hk}`, `Spend to date ${money(r.spend)}`],
+    color: (r) => r.status === 'On Air' ? 'var(--color-ok)' : r.status === 'Pause' ? 'var(--color-bad)' : r.status === 'Ready-to-Test' ? 'var(--color-warn)' : (r.status === 'Archive' ? 'var(--cds-chart-muted)' : dash.colors[0]) }));
+  dash.draw('chart-spmix', (el) => hbars(el, dash.data('sp_mix'), 'sp_status', 'count', fmt.int, {
+    label: 'On-air creatives per SP status', detail: (r) => [`${r.sp_status}: ${r.count} on air`, `Spend to date ${money(r.spend)}`],
+    color: (r) => ({ 'P2 Hit Ad': 'var(--color-ok)', 'P1 Winner': 'var(--color-ok)', 'Mid-tier': 'var(--color-warn)', 'P2 Loser': 'var(--color-bad)', 'Pause': 'var(--color-bad)' }[r.sp_status] || 'var(--cds-chart-muted)') }));
+  dash.draw('chart-pause', (el) => hbars(el, dash.data('pause_reasons'), 'reason', 'count', fmt.int, {
+    label: 'Paused and archived creatives per pause reason', detail: (r) => [`${r.reason}: ${r.count}`, `${r.paused} paused · ${r.archived} archived`],
+    color: (r) => r.reason === 'Not filled' ? 'var(--color-warn)' : r.reason === 'Graduate (Winning)' ? 'var(--color-ok)' : dash.colors[0] }));
+
+  /* Launches per week: grouped bars */
+  dash.draw('chart-launches', (el) => {
+    const src = dash.data('launch_weeks');
+    if (!chartState(el, src)) return;
+    const rows = src.data;
+    if (!rows.length) { chartState(el, { status: 'empty' }); return; }
+    const width = Math.max(280, el.clientWidth || 600), height = 220;
+    const svg = svgIn(el, width, height, 'Creatives launched per week and how many scored SP ≥ 2, last 16 weeks');
+    const y = d3.scaleLinear().domain([0, d3.max(rows, (r) => +r.launched) || 1]).nice().range([height - 28, 12]);
+    const ticks = y.ticks(4);
+    const left = measure(svg, ticks, fmt.int) + 10;
+    const x0 = d3.scaleBand().domain(rows.map((r) => r.week)).range([left, width - 10]).paddingInner(0.3);
+    const x1 = d3.scaleBand().domain(['launched', 'wins']).range([0, x0.bandwidth()]).padding(0.1);
+    svg.append('g').selectAll('line').data(ticks).join('line').attr('class', 'cr-grid-line').attr('x1', left).attr('x2', width - 10).attr('y1', (d) => y(d)).attr('y2', (d) => y(d));
+    svg.append('g').attr('class', 'cr-axis').attr('transform', `translate(${left},0)`).call(d3.axisLeft(y).tickValues(ticks).tickFormat(fmt.int).tickSize(0)).select('.domain').remove();
+    const every = Math.max(1, Math.ceil(rows.length / Math.max(2, Math.floor((width - left) / 70))));
+    svg.append('g').attr('class', 'cr-axis').attr('transform', `translate(0,${height - 28})`)
+      .call(d3.axisBottom(x0).tickValues(rows.map((r) => r.week).filter((w, i) => i % every === 0)).tickFormat((w) => fmt.date(parseDate(w))).tickSize(0).tickPadding(8)).select('.domain').remove();
+    const g = svg.selectAll('g.wk').data(rows).join('g').attr('class', 'wk').attr('transform', (r) => `translate(${x0(r.week)},0)`);
+    g.append('rect').attr('x', x1('launched')).attr('width', x1.bandwidth()).attr('y', (r) => y(+r.launched)).attr('height', (r) => y(0) - y(+r.launched)).style('fill', dash.colors[0]);
+    g.append('rect').attr('x', x1('wins')).attr('width', x1.bandwidth()).attr('y', (r) => y(+r.wins)).attr('height', (r) => y(0) - y(+r.wins)).style('fill', 'var(--color-ok)');
+    const tip = tooltip(el);
+    g.on('mousemove', (event, r) => { const [mx, my] = d3.pointer(event, el); tip.show(mx, my, [`Week of ${fmt.dateFull(parseDate(r.week))}`, `${r.launched} launched · ${r.scored} scored`, `${r.wins} wins (SP ≥ 2) · ${r.hit_ads} P2 Hit Ads`, r.win_rate == null ? 'Win rate —' : `Win rate ${fmt.pct(r.win_rate)}`]); })
+      .on('mouseleave', () => tip.hide());
+  });
+  dash.draw('legend-launch', (el) => {
+    const mk = (label, color) => { const s = document.createElement('span'); const i = document.createElement('i'); i.style.background = color; s.append(i, label); return s; };
+    el.replaceChildren(mk('Launched', dash.colors[0]), mk('Wins (SP ≥ 2)', 'var(--color-ok)'));
+  });
+
+  /* ---- Generic sortable table ---- */
+  function makeTable(tableId, drawName, srcId, cols, state, opts) {
+    const table = $('#' + tableId);
+    for (const th of $$('th[data-sort]', table)) th.addEventListener('click', () => {
+      const f = th.dataset.sort;
+      if (state.sort === f) state.dir = state.dir === 'asc' ? 'desc' : 'asc'; else { state.sort = f; state.dir = (cols.find((c) => c.field === f) || {}).numeric ? 'desc' : 'asc'; }
+      dash.draw(drawName);
+    });
+    dash.draw(drawName, (tbody) => {
+      const src = dash.data(srcId);
+      tbody.replaceChildren();
+      for (const th of $$('th[data-sort]', table)) { if (th.dataset.sort === state.sort) th.setAttribute('aria-sort', state.dir === 'asc' ? 'ascending' : 'descending'); else th.removeAttribute('aria-sort'); }
+      if (src.status !== 'ok') { const tr = tbody.insertRow(); const td = tr.insertCell(); td.colSpan = cols.length; td.className = 'cr-empty'; td.textContent = src.status === 'loading' ? 'Loading…' : src.status === 'error' ? 'Failed to load' : src.status === 'connect' ? 'Waiting for connector access' : '—'; return; }
+      let rows = opts.filter ? src.data.filter(opts.filter) : src.data.slice();
+      const col = cols.find((c) => c.field === state.sort) || cols[0];
+      const dir = state.dir === 'asc' ? 1 : -1;
+      rows.sort((a, b) => {
+        const va = a[col.field], vb = b[col.field];
+        const ea = va == null || va === '', eb = vb == null || vb === '';
+        if (ea && eb) return 0; if (ea) return 1; if (eb) return -1;
+        if (col.numeric) return (va - vb) * dir;
+        return String(va).localeCompare(String(vb), 'zh-Hant', { numeric: true }) * dir;
+      });
+      const limit = opts.limit || 1000;
+      for (const r of rows.slice(0, limit)) {
+        const tr = tbody.insertRow();
+        tr.dataset.key = opts.key(r);
+        if (selected && opts.isSelected && opts.isSelected(r, selected)) tr.classList.add('cr-selected');
+        tr.tabIndex = 0;
+        for (const c of cols) {
+          const td = tr.insertCell();
+          if (c.numeric) td.className = 'cr-n';
+          if (c.cls) td.classList.add(c.cls);
+          if (c.render) c.render(td, r); else td.textContent = c.format ? c.format(r[c.field], r) : (r[c.field] == null || r[c.field] === '' ? '—' : String(r[c.field]));
+        }
+        if (opts.onSelect) { tr.addEventListener('click', () => opts.onSelect(r)); tr.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); opts.onSelect(r); } }); }
+      }
+      if (rows.length > limit) { const tr = tbody.insertRow(); const td = tr.insertCell(); td.colSpan = cols.length; td.className = 'cr-empty'; td.textContent = `Showing the first ${limit} of ${rows.length} rows; narrow the filters to see the rest.`; }
+    });
+  }
+  const chipCell = (field, classes) => (td, r) => { const v = r[field]; if (!v) { td.textContent = '—'; return; } td.appendChild(chip(v, classes[v] == null ? '' : classes[v])); };
+  const encode = (s) => String(s).replace(/[%&=]/g, (c) => encodeURIComponent(c));
+
+  /* ---- Roadmap table ---- */
+  const rmState = { sort: 'launch', dir: 'desc', search: '', status: 'live', market: '', sp: '', source: '', format: '', category: '', hit: false };
+  const rmCols = [
+    { field: 'name', cls: 'cr-name', render: (td, r) => { td.textContent = r.name; if (r.hit) td.appendChild(chip('Hit', 'strong')); } },
+    { field: 'status', render: chipCell('status', statusClass) },
+    { field: 'market' },
+    { field: 'sp_status', render: chipCell('sp_status', spClass) },
+    { field: 'sp', numeric: true, format: (v) => num(v, fmt.sp) },
+    { field: 'cpft', numeric: true, format: (v) => num(v, fmt.money2) },
+    { field: 'ltv_cac', numeric: true, format: (v) => num(v, fmt.ratio) },
+    { field: 'spend', numeric: true, format: (v) => num(v, fmt.money) },
+    { field: 'launch' },
+    { field: 'days_live', numeric: true, format: (v) => num(v, fmt.int) },
+    { field: 'watch', render: chipCell('watch', { 'Watch List': 'warn', 'Pause-candidate': 'bad', 'None': 'muted' }) },
+    { field: 'pause_reason' }, { field: 'source' }, { field: 'format' }, { field: 'category' }, { field: 'creator' }
+  ];
+  const rmInputs = { search: '#rm-search', status: '#rm-status', market: '#rm-market', sp: '#rm-sp', source: '#rm-source', format: '#rm-format', category: '#rm-category' };
+  for (const [k, sel] of Object.entries(rmInputs)) $(sel).addEventListener('input', (e) => { rmState[k] = e.target.value; dash.draw('rm-body'); });
+  $('#rm-hit').addEventListener('change', (e) => { rmState.hit = e.target.checked; dash.draw('rm-body'); });
+  $('#rm-reset').addEventListener('click', () => { Object.assign(rmState, { search: '', status: 'live', market: '', sp: '', source: '', format: '', category: '', hit: false }); for (const [k, sel] of Object.entries(rmInputs)) $(sel).value = rmState[k]; $('#rm-hit').checked = false; dash.draw('rm-body'); });
+  $('#rm-status').value = rmState.status;
+  function optionDraw(name, field, allLabel, stateObj, stateKey) {
+    dash.draw(name, (sel) => {
+      const src = dash.data('roadmap_rows');
+      const values = src.status === 'ok' ? [...new Set(src.data.map((r) => r[field]).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'zh-Hant')) : [];
+      sel.replaceChildren(new Option(allLabel, ''), ...values.map((v) => new Option(v, v)));
+      sel.value = values.includes(stateObj[stateKey]) ? stateObj[stateKey] : '';
+    });
+  }
+  optionDraw('opt-source', 'source', 'Any source', rmState, 'source');
+  optionDraw('opt-format', 'format', 'Any format', rmState, 'format');
+  optionDraw('opt-category', 'category', 'Any category', rmState, 'category');
+  const rmFilter = (r) => {
+    if (rmState.status === 'live' ? !(r.status === 'On Air' || r.status === 'Pause') : (rmState.status && r.status !== rmState.status)) return false;
+    if (rmState.market && r.market !== rmState.market) return false;
+    if (rmState.sp === 'none' ? r.sp_status : (rmState.sp && r.sp_status !== rmState.sp)) return false;
+    if (rmState.source && r.source !== rmState.source) return false;
+    if (rmState.format && r.format !== rmState.format) return false;
+    if (rmState.category && r.category !== rmState.category) return false;
+    if (rmState.hit && !r.hit) return false;
+    if (rmState.search) { const q = rmState.search.toLowerCase(); if (![r.name, r.ad_name, r.creator, r.hook, r.category, r.ad_ids, r.learnings].join(' ').toLowerCase().includes(q)) return false; }
+    return true;
+  };
+  makeTable('roadmap-table', 'rm-body', 'roadmap_rows', rmCols, rmState, { key: (r) => encode(r.url), limit: 400, filter: rmFilter, isSelected: (r, sel) => r.url === sel.url, onSelect: selectRow });
+  const countDraw = (name, srcId, filter, extra) => dash.draw(name, (el) => {
+    const src = dash.data(srcId);
+    if (src.status !== 'ok') { el.textContent = '—'; return; }
+    const rows = src.data.filter(filter);
+    el.textContent = extra ? extra(rows) : fmt.int(rows.length);
+  });
+  countDraw('rm-count', 'roadmap_rows', rmFilter);
+  for (const sel of Object.values(rmInputs)) $(sel).addEventListener('input', () => dash.draw('rm-count'));
+  $('#rm-hit').addEventListener('change', () => dash.draw('rm-count'));
+  $('#rm-reset').addEventListener('click', () => dash.draw('rm-count'));
+
+  /* ---- Performance table ---- */
+  const pfState = { sort: 'spend_7d', dir: 'desc', search: '', market: '', roadmap: '', active: '7d', minspend: 0 };
+  const pfCols = [
+    { field: 'name', cls: 'cr-name', render: (td, r) => { td.textContent = r.name; if (!r.on_roadmap) td.appendChild(chip('not on roadmap', 'muted')); } },
+    { field: 'market' },
+    { field: 'status', render: chipCell('status', statusClass) },
+    { field: 'sp_status', render: chipCell('sp_status', spClass) },
+    { field: 'sp', numeric: true, format: (v) => num(v, fmt.sp) },
+    { field: 'spend', numeric: true, format: (v) => num(v, fmt.money) },
+    { field: 'spend_7d', numeric: true, format: (v) => num(v, fmt.money) },
+    { field: 'impressions', numeric: true, format: (v) => num(v, fmt.int) },
+    { field: 'ctr', numeric: true, format: (v) => num(v, fmt.pct1) },
+    { field: 'installs', numeric: true, format: (v) => num(v, fmt.int) },
+    { field: 'cpi', numeric: true, format: (v) => num(v, fmt.money2) },
+    { field: 'trial_starts', numeric: true, format: (v) => num(v, fmt.int) },
+    { field: 'cpft', numeric: true, format: (v) => num(v, fmt.money2) },
+    { field: 'purchases', numeric: true, format: (v) => num(v, fmt.int) },
+    { field: 'first_spend' }, { field: 'last_spend' }, { field: 'campaign' }
+  ];
+  const pfInputs = { search: '#pf-search', market: '#pf-market', roadmap: '#pf-roadmap', active: '#pf-active', minspend: '#pf-minspend' };
+  for (const [k, sel] of Object.entries(pfInputs)) $(sel).addEventListener('input', (e) => { pfState[k] = k === 'minspend' ? Number(e.target.value) : e.target.value; dash.draw('pf-body'); });
+  $('#pf-reset').addEventListener('click', () => { Object.assign(pfState, { search: '', market: '', roadmap: '', active: '7d', minspend: 0 }); for (const [k, sel] of Object.entries(pfInputs)) $(sel).value = String(pfState[k]); dash.draw('pf-body'); });
+  $('#pf-active').value = pfState.active;
+  const pfFilter = (r) => {
+    if (pfState.market && r.market !== pfState.market) return false;
+    if (pfState.roadmap === 'on' && !r.on_roadmap) return false;
+    if (pfState.roadmap === 'off' && r.on_roadmap) return false;
+    if (pfState.active === '7d' && !(r.spend_7d > 0)) return false;
+    if (pfState.minspend && !(r.spend >= pfState.minspend)) return false;
+    if (pfState.search) { const q = pfState.search.toLowerCase(); if (![r.name, r.ad_name, r.campaign, r.ad_id].join(' ').toLowerCase().includes(q)) return false; }
+    return true;
+  };
+  makeTable('perf-table', 'pf-body', 'perf_rows', pfCols, pfState, { key: (r) => r.ad_id, limit: 400, filter: pfFilter,
+    isSelected: (r, sel) => sel.ad_ids && String(sel.ad_ids).split(',').includes(r.ad_id), onSelect: selectAd });
+  countDraw('pf-count', 'perf_rows', pfFilter);
+  countDraw('pf-sum-spend', 'perf_rows', pfFilter, (rows) => fmt.money(rows.reduce((s, r) => s + (r.spend || 0), 0)));
+  for (const sel of Object.values(pfInputs)) $(sel).addEventListener('input', () => { dash.draw('pf-count'); dash.draw('pf-sum-spend'); });
+  $('#pf-reset').addEventListener('click', () => { dash.draw('pf-count'); dash.draw('pf-sum-spend'); });
+
+  /* ---- Win by dimension ---- */
+  const wdState = { sort: 'win_rate', dir: 'desc', dim: 'category', min: 3 };
+  $('#wd-dim').addEventListener('input', (e) => { wdState.dim = e.target.value; dash.draw('wd-body'); dash.draw('chart-windim'); });
+  $('#wd-min').addEventListener('input', (e) => { wdState.min = Number(e.target.value); dash.draw('wd-body'); dash.draw('chart-windim'); });
+  const wdFilter = (r) => r.dim === wdState.dim && r.scored >= wdState.min;
+  makeTable('windim-table', 'wd-body', 'win_by_dim', [
+    { field: 'value', cls: 'cr-name' },
+    { field: 'n', numeric: true, format: (v) => num(v, fmt.int) },
+    { field: 'scored', numeric: true, format: (v) => num(v, fmt.int) },
+    { field: 'wins', numeric: true, format: (v) => num(v, fmt.int) },
+    { field: 'win_rate', numeric: true, format: (v) => num(v, fmt.pct) },
+    { field: 'avg_sp', numeric: true, format: (v) => num(v, fmt.sp) },
+    { field: 'hit_ads', numeric: true, format: (v) => num(v, fmt.int) },
+    { field: 'spend', numeric: true, format: (v) => num(v, fmt.money) }
+  ], wdState, { key: (r) => encode(r.dim) + ',' + encode(r.value), filter: wdFilter, limit: 60 });
+  dash.draw('chart-windim', (el) => hbars(el, dash.data('win_by_dim'), 'value', 'win_rate', fmt.pct, {
+    label: 'Win rate by group', rows: (rows) => rows.filter(wdFilter).sort((a, b) => b.win_rate - a.win_rate).slice(0, 15),
+    detail: (r) => [`${r.value}`, `${r.wins} of ${r.scored} scored rows won (${fmt.pct(r.win_rate)})`, `${r.n} launched · avg SP ${num(r.avg_sp, fmt.sp)} · ${r.hit_ads} hit ads`],
+    color: (r) => r.win_rate >= 0.5 ? 'var(--color-ok)' : dash.colors[0] }));
+
+  /* ---- Top winners ---- */
+  makeTable('top-table', 'top-body', 'roadmap_rows', [
+    { field: 'name', cls: 'cr-name', render: (td, r) => { td.textContent = r.name; if (r.hit) td.appendChild(chip('Hit', 'strong')); } },
+    { field: 'status', render: chipCell('status', statusClass) },
+    { field: 'market' },
+    { field: 'sp', numeric: true, format: (v) => num(v, fmt.sp) },
+    { field: 'cpft', numeric: true, format: (v) => num(v, fmt.money2) },
+    { field: 'spend', numeric: true, format: (v) => num(v, fmt.money) }
+  ], { sort: 'sp', dir: 'desc' }, { key: (r) => encode(r.url), filter: (r) => r.sp != null && r.sp >= 2, limit: 15, isSelected: (r, sel) => r.url === sel.url, onSelect: selectRow });
+
+  /* ---- Learnings ---- */
+  const lnState = { search: '', market: '', outcome: '' };
+  for (const [k, sel] of Object.entries({ search: '#ln-search', market: '#ln-market', outcome: '#ln-outcome' })) $(sel).addEventListener('input', (e) => { lnState[k] = e.target.value; dash.draw('ln-list'); dash.draw('ln-count'); });
+  const lnFilter = (r) => {
+    if (lnState.market && r.market !== lnState.market) return false;
+    if (lnState.outcome === 'win' && !(r.sp != null && r.sp >= 2)) return false;
+    if (lnState.outcome === 'lose' && (r.sp != null && r.sp >= 2)) return false;
+    if (lnState.search && !(r.name + ' ' + r.learnings + ' ' + r.creator).toLowerCase().includes(lnState.search.toLowerCase())) return false;
+    return true;
+  };
+  countDraw('ln-count', 'learnings_rows', lnFilter);
+  dash.draw('ln-list', (el) => {
+    const src = dash.data('learnings_rows');
+    el.replaceChildren();
+    if (src.status !== 'ok') { const p = document.createElement('div'); p.className = 'cr-empty'; p.textContent = src.status === 'loading' ? 'Loading…' : src.status === 'error' ? 'Failed to load' : '—'; el.appendChild(p); return; }
+    const rows = src.data.filter(lnFilter);
+    for (const r of rows.slice(0, 200)) {
+      const item = document.createElement('div'); item.className = 'cr-learn-item';
+      const head = document.createElement('div'); head.className = 'cr-chips';
+      const a = document.createElement('a'); a.className = 'cr-link'; a.href = r.url; a.target = '_blank'; a.rel = 'noopener'; a.textContent = r.name;
+      a.setAttribute('data-source', 'learnings_rows'); a.setAttribute('data-field', 'name'); a.setAttribute('data-where', 'url=' + encode(r.url));
+      head.append(a, chip(r.status, statusClass[r.status] || ''));
+      if (r.sp_status) head.appendChild(chip(r.sp_status, spClass[r.sp_status] || ''));
+      if (r.sp != null) { const s = chip('SP ' + fmt.sp(r.sp), r.sp >= 2 ? 'ok' : ''); s.setAttribute('data-source', 'learnings_rows'); s.setAttribute('data-field', 'sp'); s.setAttribute('data-where', 'url=' + encode(r.url)); head.appendChild(s); }
+      if (r.cpft != null) { const s = chip('CPFT ' + fmt.money2(r.cpft), ''); head.appendChild(s); }
+      if (r.market) head.appendChild(chip(r.market, 'muted'));
+      const meta = document.createElement('div'); meta.className = 'cr-small cr-muted';
+      meta.textContent = [r.launch ? 'Launched ' + r.launch : '', r.paused ? 'Paused ' + r.paused : '', r.pause_reason ? 'Reason: ' + r.pause_reason : '', r.creator ? 'Creator: ' + r.creator : '', r.edited ? 'Edited ' + r.edited : ''].filter(Boolean).join(' · ');
+      const p = document.createElement('p'); p.className = 'cr-learn-text'; p.textContent = r.learnings;
+      p.setAttribute('data-source', 'learnings_rows'); p.setAttribute('data-field', 'learnings'); p.setAttribute('data-where', 'url=' + encode(r.url));
+      item.append(head, meta, p);
+      item.addEventListener('click', (e) => { if (e.target.tagName !== 'A') selectRow(r); });
+      el.appendChild(item);
+    }
+    if (!rows.length) { const p = document.createElement('div'); p.className = 'cr-empty'; p.textContent = 'No learnings match these filters.'; el.appendChild(p); }
+  });
+
+  /* ---- Detail drawings ---- */
+  /* A detail mark points at the selected roadmap row (by url), or at the perf row (by ad id) when the ad is not on the roadmap. */
+  const perfFields = new Set(['name', 'ad_name', 'market', 'status', 'sp_status', 'sp', 'spend', 'ad_ids']);
+  const mark = (el, field) => {
+    if (selected && selected.url) { el.setAttribute('data-source', 'roadmap_rows'); el.setAttribute('data-field', field); el.setAttribute('data-where', 'url=' + encode(selected.url)); }
+    else if (selected && selected.ad_ids && perfFields.has(field) && field !== 'ad_ids') { el.setAttribute('data-source', 'perf_rows'); el.setAttribute('data-field', field); el.setAttribute('data-where', 'ad_id=' + encode(String(selected.ad_ids).split(',')[0])); }
+    else { el.removeAttribute('data-source'); el.removeAttribute('data-field'); el.removeAttribute('data-where'); }
+  };
+  dash.draw('d-name', (el) => { mark(el, 'name'); text(el, selected ? selected.name : null); });
+  dash.draw('d-chips', (el) => {
+    el.replaceChildren(); if (!selected) return;
+    el.appendChild(chip(selected.status, statusClass[selected.status] || ''));
+    if (selected.sp_status) el.appendChild(chip(selected.sp_status, spClass[selected.sp_status] || ''));
+    if (selected.sp != null) { const s = chip('SP ' + fmt.sp(selected.sp), selected.sp >= 2 ? 'ok' : ''); mark(s, 'sp'); el.appendChild(s); }
+    if (selected.cpft != null) { const s = chip('CPFT ' + fmt.money2(selected.cpft), ''); mark(s, 'cpft'); el.appendChild(s); }
+    if (selected.ltv_cac != null) { const s = chip('LTV/CAC ' + fmt.ratio(selected.ltv_cac), ''); mark(s, 'ltv_cac'); el.appendChild(s); }
+    if (selected.market) el.appendChild(chip(selected.market, 'muted'));
+    if (selected.watch && selected.watch !== 'None') el.appendChild(chip(selected.watch, selected.watch === 'Watch List' ? 'warn' : 'bad'));
+    if (selected.hit) el.appendChild(chip('Hit ad', 'strong'));
+  });
+  dash.draw('d-notion', (el) => { el.textContent = 'Open in Notion'; if (selected && selected.url) { el.href = selected.url; el.target = '_blank'; el.rel = 'noopener'; el.hidden = false; } else el.hidden = true; });
+  dash.draw('d-preview', (el) => {
+    el.textContent = 'Meta preview';
+    let link = selected && selected.preview;
+    if (!link && selected && selected.ad_ids) { const pf = dash.data('perf_rows'); if (pf.status === 'ok') { const hit = pf.data.find((p) => String(selected.ad_ids).split(',').includes(p.ad_id) && p.preview); link = hit && hit.preview; } }
+    if (link) { el.href = link; el.target = '_blank'; el.rel = 'noopener'; el.hidden = false; } else el.hidden = true;
+  });
+  dash.draw('d-meta', (dl) => {
+    dl.replaceChildren(); if (!selected) return;
+    const add = (k, v, field) => { if (v == null || v === '') return; const dt = document.createElement('dt'); dt.textContent = k; const dd = document.createElement('dd'); dd.textContent = String(v); if (field) mark(dd, field); dl.append(dt, dd); };
+    add('Ad name', selected.ad_name, 'ad_name'); add('Meta ad IDs', (selected.ad_ids || '').split(',').filter(Boolean).join(', '), 'ad_ids');
+    add('Launch', selected.launch, 'launch'); add('Paused', selected.paused, 'paused'); add('Pause reason', selected.pause_reason, 'pause_reason');
+    add('Days live', selected.days_live, 'days_live'); add('Spend to date (Notion)', selected.spend == null ? '' : fmt.money(selected.spend), 'spend');
+    add('Source', selected.source, 'source'); add('Format', selected.format, 'format'); add('Category', selected.category, 'category');
+    add('Creator', selected.creator, 'creator'); add('Hook tag', selected.hook_tag, 'hook_tag'); add('Feature', selected.feature, 'feature');
+    add('Persona', selected.persona, 'persona'); add('Priority', selected.priority, 'priority'); add('Parent creative', selected.parent, 'parent');
+    add('Production date', selected.prod_date, 'prod_date'); add('Last synced', selected.synced, 'synced');
+    if (selected.reference) { const dt = document.createElement('dt'); dt.textContent = 'Reference'; const dd = document.createElement('dd'); const a = document.createElement('a'); a.className = 'cr-link'; a.href = selected.reference; a.target = '_blank'; a.rel = 'noopener'; a.textContent = selected.reference; dd.appendChild(a); dl.append(dt, dd); }
+  });
+  dash.draw('d-hook', (el) => { mark(el, 'hook'); text(el, selected ? selected.hook : null); });
+  dash.draw('d-learnings', (el) => { mark(el, 'learnings'); text(el, selected ? selected.learnings : null); });
+  function lifetime(name, field, format) {
+    dash.draw(name, (el) => {
+      const src = dash.data('ad_lifetime');
+      if (!selected || !selected.ad_ids || src.status !== 'ok' || !src.data || !src.data.length) { el.textContent = src.status === 'loading' && selected && selected.ad_ids ? '…' : '—'; return; }
+      el.textContent = num(src.data[0][field], format);
+    });
+  }
+  lifetime('d-spend', 'spend', fmt.money); lifetime('d-imp', 'impressions', fmt.int); lifetime('d-ctr', 'ctr', fmt.pct1); lifetime('d-inst', 'installs', fmt.int);
+  lifetime('d-cpi', 'cpi', fmt.money2); lifetime('d-trials', 'trial_starts', fmt.int); lifetime('d-cpft', 'cpft', fmt.money2); lifetime('d-purch', 'purchases', fmt.int); lifetime('d-days', 'active_days', fmt.int);
+  dash.draw('d-chart', (el) => {
+    const src = dash.data('bq_ad_daily');
+    if (!selected || !selected.ad_ids) { el.replaceChildren(); const p = document.createElement('div'); p.className = 'cr-empty'; p.textContent = 'This row has no Meta ad ID bound yet, so there is no delivery data.'; el.appendChild(p); return; }
+    if (!chartState(el, src)) return;
+    const byDate = d3.rollups(src.data, (v) => ({ spend: d3.sum(v, (d) => +d.spend || 0), trials: d3.sum(v, (d) => +d.trial_starts || 0), installs: d3.sum(v, (d) => +d.installs || 0) }), (d) => String(d.date))
+      .map(([date, v]) => ({ date: parseDate(date), iso: date, ...v })).sort((a, b) => a.date - b.date);
+    if (!byDate.length) { chartState(el, { status: 'empty' }); return; }
+    const width = Math.max(280, el.clientWidth || 500), height = 220;
+    const svg = svgIn(el, width, height, 'Daily spend (bars) and trial starts (line) for the selected creative');
+    const y = d3.scaleLinear().domain([0, d3.max(byDate, (d) => d.spend) || 1]).nice().range([height - 28, 12]);
+    const y2 = d3.scaleLinear().domain([0, d3.max(byDate, (d) => d.trials) || 1]).nice().range([height - 28, 12]);
+    const ticks = y.ticks(4), ticks2 = y2.ticks(4);
+    const left = measure(svg, ticks, fmt.money) + 10, right = measure(svg, ticks2, fmt.int) + 10;
+    const x = d3.scaleBand().domain(byDate.map((d) => d.iso)).range([left, width - right]).padding(0.2);
+    svg.append('g').selectAll('line').data(ticks).join('line').attr('class', 'cr-grid-line').attr('x1', left).attr('x2', width - right).attr('y1', (d) => y(d)).attr('y2', (d) => y(d));
+    svg.append('g').attr('class', 'cr-axis').attr('transform', `translate(${left},0)`).call(d3.axisLeft(y).tickValues(ticks).tickFormat(fmt.money).tickSize(0)).select('.domain').remove();
+    svg.append('g').attr('class', 'cr-axis').attr('transform', `translate(${width - right},0)`).call(d3.axisRight(y2).tickValues(ticks2).tickFormat(fmt.int).tickSize(0)).select('.domain').remove();
+    const every = Math.max(1, Math.ceil(byDate.length / Math.max(2, Math.floor((width - left - right) / 70))));
+    svg.append('g').attr('class', 'cr-axis').attr('transform', `translate(0,${height - 28})`)
+      .call(d3.axisBottom(x).tickValues(byDate.map((d) => d.iso).filter((d, i) => i % every === 0)).tickFormat((d) => fmt.date(parseDate(d))).tickSize(0).tickPadding(8)).select('.domain').remove();
+    svg.selectAll('rect.bar').data(byDate).join('rect').attr('class', 'bar').attr('x', (d) => x(d.iso)).attr('width', x.bandwidth()).attr('y', (d) => y(d.spend)).attr('height', (d) => y(0) - y(d.spend)).style('fill', dash.colors[0]);
+    svg.append('path').datum(byDate).attr('fill', 'none').style('stroke', 'var(--color-ok)').attr('stroke-width', 2)
+      .attr('d', d3.line().x((d) => x(d.iso) + x.bandwidth() / 2).y((d) => y2(d.trials)));
+    const tip = tooltip(el);
+    svg.selectAll('rect.hit').data(byDate).join('rect').attr('class', 'hit').attr('x', (d) => x(d.iso) - x.step() * 0.1).attr('width', x.step()).attr('y', 0).attr('height', height).attr('fill', 'transparent')
+      .on('mousemove', (event, d) => { const [mx, my] = d3.pointer(event, el); tip.show(mx, my, [d.iso, `Spend ${fmt.money2(d.spend)}`, `Installs ${fmt.int(d.installs)} · Trial starts ${fmt.int(d.trials)}`, d.trials ? `CPFT ${fmt.money2(d.spend / d.trials)}` : 'CPFT —']); })
+      .on('mouseleave', () => tip.hide());
+  });
+})();
+</script>
