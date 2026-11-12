@@ -95,6 +95,7 @@
     <nav class="cr-tabs" aria-label="Sections">
       <button class="cr-tab-btn" type="button" data-tab="overview" aria-selected="true">Overview</button>
       <button class="cr-tab-btn" type="button" data-tab="roadmap" aria-selected="false">Roadmap</button>
+      <button class="cr-tab-btn" type="button" data-tab="testing" aria-selected="false">Testing</button>
       <button class="cr-tab-btn" type="button" data-tab="performance" aria-selected="false">Performance</button>
       <button class="cr-tab-btn" type="button" data-tab="insights" aria-selected="false">Insights</button>
       <button class="cr-tab-btn" type="button" data-tab="learnings" aria-selected="false">Learnings</button>
@@ -240,6 +241,69 @@
     </div>
   </section>
 
+  <!-- Testing -->
+  <section id="testing" class="cr-section" data-tabpanel hidden>
+    <h2 class="cr-h2">Testing ads</h2>
+    <p class="cr-note">Every Meta ad that spent in a testing campaign (campaign name contains “testing”) in Taiwan or Hong Kong this year. The first gate is 10 installs (10 checkouts for web ads), which is when the nightly sync can score SP; the second is 10 trial starts, where TW ads need CPFT ≤ $58 to be a P2 Hit Ad. “Graduated” means the same creative later spent in a CPR, scaling or winning campaign under a new ad ID.</p>
+    <div class="cr-filters" id="testing-filters">
+      <label>Market<select class="dash-select" id="ts-market"><option value="All">TW + HK</option><option value="TW">TW</option><option value="HK">HK</option></select></label>
+      <label>Entered testing<select class="dash-select" id="ts-window"><option value="30">Last 30 days</option><option value="90" selected>Last 90 days</option><option value="all">All of 2026</option></select></label>
+      <label>Outcome<select class="dash-select" id="ts-outcome"><option value="">Any outcome</option><option value="P2 Hit Ad">P2 Hit Ad</option><option value="P2 Loser">P2 Loser</option><option value="P1 Winner">P1 Winner</option><option value="Mid-tier">Mid-tier</option><option value="Below baseline">Below baseline</option><option value="SP pending">Reached 10, SP pending</option><option value="In test">Still in test, under 10</option><option value="Stopped early">Stopped before 10</option></select></label>
+      <label>Search<input class="cr-input" id="ts-search" type="search" placeholder="Creative, ad name, campaign…"></label>
+      <label class="cr-check"><input type="checkbox" id="ts-grad"> Graduated only</label>
+      <button class="cr-btn" type="button" id="ts-reset">Reset</button>
+    </div>
+    <div class="cr-grid" data-source="testing_kpis">
+      <div class="cr-card"><span class="cr-label">Entered testing</span><span class="cr-num" data-draw="t-entered" data-source="testing_kpis" data-field="entered">—</span><span class="cr-sub"><span data-draw="t-spend" data-source="testing_kpis" data-field="spend">—</span> test spend</span></div>
+      <div class="cr-card"><span class="cr-label">Reached 10 installs</span><span class="cr-num" data-draw="t-reached" data-source="testing_kpis" data-field="reached_10">—</span><span class="cr-sub"><span data-draw="t-reached-rate" data-source="testing_kpis" data-field="reached_10_rate">—</span> of entered · median <span data-draw="t-days10" data-source="testing_kpis" data-field="median_days_to_10">—</span> days, <span data-draw="t-spend10" data-source="testing_kpis" data-field="median_spend_to_10">—</span></span></div>
+      <div class="cr-card"><span class="cr-label">SP ≥ 2</span><span class="cr-num" data-draw="t-winners" data-source="testing_kpis" data-field="winners">—</span><span class="cr-sub"><span data-draw="t-winrate" data-source="testing_kpis" data-field="win_rate">—</span> of <span data-draw="t-scored" data-source="testing_kpis" data-field="scored">—</span> scored</span></div>
+      <div class="cr-card"><span class="cr-label">P2 Hit Ads</span><span class="cr-num" data-draw="t-hits" data-source="testing_kpis" data-field="hit_ads">—</span><span class="cr-sub"><span data-draw="t-losers" data-source="testing_kpis" data-field="p2_losers">—</span> P2 Losers · <span data-draw="t-grad" data-source="testing_kpis" data-field="graduated">—</span> graduated</span></div>
+      <div class="cr-card"><span class="cr-label">Still in test</span><span class="cr-num" data-draw="t-intest" data-source="testing_kpis" data-field="in_test">—</span><span class="cr-sub">under 10 installs, spent in the last 3 days</span></div>
+      <div class="cr-card"><span class="cr-label">Stopped before 10</span><span class="cr-num" data-draw="t-stopped" data-source="testing_kpis" data-field="stopped_early">—</span><span class="cr-sub">never reached the SP gate</span></div>
+      <div class="cr-card"><span class="cr-label">Testing CPFT</span><span class="cr-num" data-draw="t-cpft" data-source="testing_kpis" data-field="cpft">—</span><span class="cr-sub"><span data-draw="t-trials" data-source="testing_kpis" data-field="trial_starts">—</span> trial starts in testing</span></div>
+      <div class="cr-card"><span class="cr-label">Median test length</span><span class="cr-num" data-draw="t-testdays" data-source="testing_kpis" data-field="median_test_days">—</span><span class="cr-sub">days with spend in testing</span></div>
+    </div>
+    <div class="cr-two">
+      <div class="cr-block" id="testing-funnel-block">
+        <h3 class="cr-h3">Gates passed</h3>
+        <p class="cr-note">Ads that entered testing in the window, counted at each gate. Graduated counts every creative moved to CPR or scaling, whether or not it passed the gates first.</p>
+        <div class="cr-chart" data-draw="chart-testgates" data-source="testing_kpis" id="chart-testgates" style="min-height: 190px">—</div>
+      </div>
+      <div class="cr-block" id="testing-weeks-block">
+        <h3 class="cr-h3">Outcome by week of entry, last 16 weeks</h3>
+        <div class="cr-legend" data-draw="legend-testing"></div>
+        <div class="cr-chart" data-draw="chart-testweeks" data-source="testing_weeks" id="chart-testweeks">—</div>
+      </div>
+    </div>
+    <p class="cr-count"><span data-draw="ts-count">—</span> testing ads · click a row to open it</p>
+    <div class="cr-tablewrap">
+      <table class="cr-table" id="testing-table" data-source="testing_rows" data-row-key="ad_id">
+        <thead><tr>
+          <th data-field="name" data-sort="name">Creative</th>
+          <th data-field="market" data-sort="market">Mkt</th>
+          <th data-field="test_start" data-sort="test_start">Test start</th>
+          <th class="cr-n" data-field="test_days" data-sort="test_days">Days</th>
+          <th data-field="outcome" data-sort="outcome">Outcome</th>
+          <th class="cr-n" data-field="spend" data-sort="spend">Test spend</th>
+          <th class="cr-n" data-field="activity" data-sort="activity">Installs</th>
+          <th class="cr-n" data-field="days_to_10" data-sort="days_to_10">Days to 10</th>
+          <th class="cr-n" data-field="spend_to_10" data-sort="spend_to_10">Spend to 10</th>
+          <th class="cr-n" data-field="trial_starts" data-sort="trial_starts">Trials</th>
+          <th class="cr-n" data-field="cpft" data-sort="cpft">CPFT</th>
+          <th class="cr-n" data-field="sp" data-sort="sp">SP</th>
+          <th data-field="sp_status" data-sort="sp_status">SP status</th>
+          <th data-field="graduated_label" data-sort="graduated_label">Graduated</th>
+          <th class="cr-n" data-field="grad_spend" data-sort="grad_spend">Scaling spend</th>
+          <th class="cr-n" data-field="grad_cpft" data-sort="grad_cpft">Scaling CPFT</th>
+          <th data-field="status" data-sort="status">Roadmap</th>
+          <th data-field="pause_reason" data-sort="pause_reason">Pause reason</th>
+          <th data-field="testing_campaign" data-sort="testing_campaign">Testing campaign</th>
+        </tr></thead>
+        <tbody data-draw="ts-body"></tbody>
+      </table>
+    </div>
+  </section>
+
   <!-- Performance -->
   <section id="performance" class="cr-section" data-tabpanel hidden>
     <h2 class="cr-h2">Ad performance, 2026 to date</h2>
@@ -366,7 +430,7 @@
     dash.loader(id, { description: 'The query packs every row into one JSON array (rows_json); this unpacks it into one row per Notion page.', fn: notionJson });
   }
   const bq = ({ answer, read }) => read.bigquery(answer);
-  for (const id of ['bq_ad_lifetime', 'bq_daily_market', 'bq_ad_daily']) {
+  for (const id of ['bq_ad_lifetime', 'bq_daily_market', 'bq_ad_daily', 'bq_testing_ads']) {
     dash.loader(id, { description: 'Reads the BigQuery result rows with their column types.', fn: bq });
   }
 })();
@@ -580,6 +644,99 @@ dash.calc('perf_rows', {
   }
 });
 
+dash.calc('testing_rows', {
+  title: 'Testing ads with their outcome',
+  description: 'Each testing ad from BigQuery joined to its roadmap row by ad ID, with an outcome worked out from the roadmap SP status (or SP score, trials and CPFT when the status is missing), whether it is still in test, and its CPR/scaling spend if it graduated.',
+  inputs: ['bq_testing_ads', 'roadmap_rows'],
+  fn: (ads, roadmap) => {
+    const byId = new Map();
+    for (const r of roadmap) for (const id of String(r.ad_ids || '').split(',')) if (id) byId.set(id, r);
+    const n = (v) => (v === null || v === undefined || v === '' || !isFinite(+v)) ? null : +v;
+    return ads.map((a) => {
+      const r = byId.get(String(a.ad_id)) || null;
+      const market = a.market === 'Taiwan' ? 'TW' : (a.market === 'Hong Kong' ? 'HK' : String(a.market || ''));
+      const spend = n(a.spend) || 0, trials = n(a.trial_starts) || 0, activity = n(a.activity) || 0;
+      const testCpft = trials ? spend / trials : null;
+      const sp = r ? r.sp : null, spStatus = r ? r.sp_status : '';
+      const cpft = (r && r.cpft != null) ? r.cpft : testCpft;
+      const through = String(a.data_through || '');
+      const active = a.test_end && through && (Date.parse(through) - Date.parse(String(a.test_end))) <= 2 * 86400000;
+      let outcome;
+      if (spStatus === 'P2 Hit Ad' || (market === 'TW' && sp != null && sp >= 2 && trials >= 10 && cpft != null && cpft <= 58)) outcome = 'P2 Hit Ad';
+      else if (spStatus === 'P2 Loser' || (market === 'TW' && sp != null && sp >= 2 && trials >= 10 && cpft != null && cpft > 58)) outcome = 'P2 Loser';
+      else if (sp != null && sp >= 2) outcome = 'P1 Winner';
+      else if (sp != null && sp >= 1.5) outcome = 'Mid-tier';
+      else if (sp != null) outcome = 'Below baseline';
+      else if (activity >= 10) outcome = 'SP pending';
+      else if (active) outcome = 'In test';
+      else outcome = 'Stopped early';
+      const gradSpend = n(a.grad_spend), gradTrials = n(a.grad_trial_starts);
+      return {
+        ad_id: String(a.ad_id), name: r ? r.name : String(a.ad_name || a.ad_id), ad_name: String(a.ad_name || ''), url: r ? r.url : '', on_roadmap: !!r,
+        market, testing_campaign: String(a.testing_campaign || ''), os_mix: String(a.os_mix || ''),
+        test_start: String(a.test_start || ''), test_end: String(a.test_end || ''), test_days: n(a.test_days) || 0, active: !!active,
+        spend, impressions: n(a.impressions) || 0, clicks: n(a.clicks) || 0, installs: n(a.installs) || 0, checkouts: n(a.checkouts) || 0,
+        activity, trial_starts: trials, purchases: n(a.purchases) || 0, spend_7d: n(a.spend_7d) || 0,
+        reached_10: activity >= 10, ten_date: a.ten_date ? String(a.ten_date) : '', days_to_10: n(a.days_to_10), spend_to_10: n(a.spend_to_10),
+        test_cpft: testCpft, cpft, sp, sp_status: spStatus, outcome,
+        graduated: a.graduated === true || a.graduated === 'true', graduated_label: (a.graduated === true || a.graduated === 'true') ? 'Yes' : '',
+        grad_ad_ids: String(a.grad_ad_ids || ''), grad_start: a.grad_start ? String(a.grad_start) : '', grad_spend: gradSpend, grad_trial_starts: gradTrials,
+        grad_cpft: (gradSpend != null && gradTrials) ? gradSpend / gradTrials : null,
+        status: r ? r.status : '', pause_reason: r ? r.pause_reason : '', learnings: r ? r.learnings : '',
+        first_spend: String(a.test_start || ''), preview: String(a.preview_link || ''), data_through: through
+      };
+    });
+  }
+});
+
+dash.calc('testing_kpis', {
+  title: 'Testing funnel by market and window',
+  description: 'For each market (All, TW, HK) and entry window (last 30 days, last 90 days, all of 2026): ads entered, reached 10 installs, scored, SP ≥ 2, P2 Hit Ads, graduated, still in test, medians of days and spend to the 10-install gate, test spend and CPFT.',
+  inputs: ['testing_rows'],
+  fn: (rows) => {
+    const through = rows.length ? rows.map((r) => r.data_through).sort().pop() : new Date().toISOString().slice(0, 10);
+    const since = (days) => new Date(Date.parse(through) - days * 86400000).toISOString().slice(0, 10);
+    const median = (xs) => { const a = xs.filter((x) => x != null && isFinite(x)).sort((p, q) => p - q); if (!a.length) return null; const m = Math.floor(a.length / 2); return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2; };
+    const out = [];
+    for (const market of ['All', 'TW', 'HK']) for (const window of ['30', '90', 'all']) {
+      const set = rows.filter((r) => (market === 'All' || r.market === market) && (window === 'all' || r.test_start >= since(+window)));
+      const reached = set.filter((r) => r.reached_10), scored = set.filter((r) => r.sp != null), winners = scored.filter((r) => r.sp >= 2);
+      const spend = set.reduce((s, r) => s + r.spend, 0), trials = set.reduce((s, r) => s + r.trial_starts, 0);
+      out.push({ market, window, since: window === 'all' ? '2026-01-01' : since(+window), through,
+        entered: set.length, reached_10: reached.length, reached_10_rate: set.length ? reached.length / set.length : null,
+        scored: scored.length, winners: winners.length, win_rate: scored.length ? winners.length / scored.length : null,
+        ten_trials: set.filter((r) => r.trial_starts >= 10).length,
+        hit_ads: set.filter((r) => r.outcome === 'P2 Hit Ad').length, p2_losers: set.filter((r) => r.outcome === 'P2 Loser').length,
+        graduated: set.filter((r) => r.graduated).length, in_test: set.filter((r) => r.outcome === 'In test').length,
+        stopped_early: set.filter((r) => r.outcome === 'Stopped early').length, sp_pending: set.filter((r) => r.outcome === 'SP pending').length,
+        median_days_to_10: median(reached.map((r) => r.days_to_10)), median_spend_to_10: median(reached.map((r) => r.spend_to_10)),
+        median_test_days: median(set.map((r) => r.test_days)),
+        spend, trial_starts: trials, cpft: trials ? spend / trials : null });
+    }
+    return out;
+  }
+});
+
+dash.calc('testing_weeks', {
+  title: 'Testing outcomes by week of entry',
+  description: 'Testing ads by the Monday of the week they first spent in testing, last 16 weeks, per market (All, TW, HK), counted by outcome.',
+  inputs: ['testing_rows'],
+  fn: (rows) => {
+    const monday = (iso) => { const d = new Date(iso + 'T00:00:00Z'); const dow = (d.getUTCDay() + 6) % 7; d.setUTCDate(d.getUTCDate() - dow); return d.toISOString().slice(0, 10); };
+    const weeks = []; const start = monday(new Date().toISOString().slice(0, 10));
+    for (let i = 15; i >= 0; i--) { const d = new Date(start + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() - 7 * i); weeks.push(d.toISOString().slice(0, 10)); }
+    const out = [];
+    for (const market of ['All', 'TW', 'HK']) for (const week of weeks) {
+      const set = rows.filter((r) => (market === 'All' || r.market === market) && r.test_start && monday(r.test_start) === week);
+      const count = (o) => set.filter((r) => r.outcome === o).length;
+      out.push({ market, week, entered: set.length, hit: count('P2 Hit Ad'), loser: count('P2 Loser'), winner: count('P1 Winner'), mid: count('Mid-tier'),
+        below: count('Below baseline'), pending: count('SP pending'), in_test: count('In test'), stopped: count('Stopped early'),
+        graduated: set.filter((r) => r.graduated).length, spend: set.reduce((s, r) => s + r.spend, 0) });
+    }
+    return out;
+  }
+});
+
 dash.calc('ad_lifetime', {
   title: 'Selected creative, lifetime totals',
   description: 'Sums of the selected creative’s daily rows (all bound ad IDs, both markets) with CTR, CPI and CPFT.',
@@ -617,7 +774,7 @@ dash.calc('ad_lifetime', {
   const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* ---- Tabs ---- */
-  const tabs = ['overview', 'roadmap', 'performance', 'insights', 'learnings'];
+  const tabs = ['overview', 'roadmap', 'testing', 'performance', 'insights', 'learnings'];
   function showTab(name) {
     if (!tabs.includes(name)) name = 'overview';
     for (const sec of $$('[data-tabpanel]')) sec.hidden = sec.id !== name;
@@ -959,6 +1116,105 @@ dash.calc('ad_lifetime', {
   countDraw('pf-sum-spend', 'perf_rows', pfFilter, (rows) => fmt.money(rows.reduce((s, r) => s + (r.spend || 0), 0)));
   for (const sel of Object.values(pfInputs)) $(sel).addEventListener('input', () => { dash.draw('pf-count'); dash.draw('pf-sum-spend'); });
   $('#pf-reset').addEventListener('click', () => { dash.draw('pf-count'); dash.draw('pf-sum-spend'); });
+
+  /* ---- Testing tab ---- */
+  const tsState = { sort: 'test_start', dir: 'desc', market: 'All', window: '90', outcome: '', search: '', grad: false };
+  const tsInputs = { market: '#ts-market', window: '#ts-window', outcome: '#ts-outcome', search: '#ts-search' };
+  const tsDraws = ['ts-body', 'ts-count', 'chart-testgates', 'chart-testweeks', 't-entered', 't-spend', 't-reached', 't-reached-rate', 't-days10', 't-spend10', 't-winners', 't-winrate', 't-scored', 't-hits', 't-losers', 't-grad', 't-intest', 't-stopped', 't-cpft', 't-trials', 't-testdays'];
+  const tsRedraw = () => { for (const d of tsDraws) dash.draw(d); };
+  for (const [k, sel] of Object.entries(tsInputs)) $(sel).addEventListener('input', (e) => { tsState[k] = e.target.value; tsRedraw(); });
+  $('#ts-grad').addEventListener('change', (e) => { tsState.grad = e.target.checked; tsRedraw(); });
+  $('#ts-reset').addEventListener('click', () => { Object.assign(tsState, { market: 'All', window: '90', outcome: '', search: '', grad: false }); for (const [k, sel] of Object.entries(tsInputs)) $(sel).value = tsState[k]; $('#ts-grad').checked = false; tsRedraw(); });
+  $('#ts-window').value = tsState.window;
+  const tsKpiRow = () => { const k = dash.data('testing_kpis'); if (k.status !== 'ok' || !k.data) return null; return k.data.find((r) => r.market === tsState.market && r.window === tsState.window) || null; };
+  const tsWhere = () => 'market=' + encode(tsState.market) + '&window=' + encode(tsState.window);
+  function tkpi(name, field, format) {
+    dash.draw(name, (el) => {
+      const k = dash.data('testing_kpis');
+      el.setAttribute('data-where', tsWhere());
+      el.classList.toggle('dash-skeleton', k.status === 'loading');
+      const row = tsKpiRow();
+      if (!row) { el.textContent = k.status === 'connect' ? 'needs BigQuery' : '—'; return; }
+      el.textContent = format ? num(row[field], format) : (row[field] == null ? '—' : String(row[field]));
+    });
+  }
+  tkpi('t-entered', 'entered', fmt.int); tkpi('t-spend', 'spend', fmt.money); tkpi('t-reached', 'reached_10', fmt.int); tkpi('t-reached-rate', 'reached_10_rate', fmt.pct);
+  tkpi('t-days10', 'median_days_to_10', fmt.int); tkpi('t-spend10', 'median_spend_to_10', fmt.money); tkpi('t-winners', 'winners', fmt.int); tkpi('t-winrate', 'win_rate', fmt.pct);
+  tkpi('t-scored', 'scored', fmt.int); tkpi('t-hits', 'hit_ads', fmt.int); tkpi('t-losers', 'p2_losers', fmt.int); tkpi('t-grad', 'graduated', fmt.int);
+  tkpi('t-intest', 'in_test', fmt.int); tkpi('t-stopped', 'stopped_early', fmt.int); tkpi('t-cpft', 'cpft', fmt.money2); tkpi('t-trials', 'trial_starts', fmt.int); tkpi('t-testdays', 'median_test_days', fmt.int);
+  dash.draw('chart-testgates', (el) => {
+    const k = dash.data('testing_kpis');
+    const row = tsKpiRow();
+    if (!row) { chartState(el, k.status === 'ok' ? { status: 'empty' } : k); return; }
+    const gates = [['Entered testing', row.entered], ['Reached 10 installs', row.reached_10], ['SP scored', row.scored], ['SP ≥ 2', row.winners], ['10 trial starts', row.ten_trials], ['P2 Hit Ad', row.hit_ads], ['Graduated', row.graduated]]
+      .map(([gate, count]) => ({ gate, count }));
+    hbars(el, { status: 'ok', data: gates }, 'gate', 'count', fmt.int, { label: 'Testing ads passing each gate',
+      detail: (r) => [`${r.gate}: ${fmt.int(r.count)}`, row.entered ? `${fmt.pct(r.count / row.entered)} of entered` : ''],
+      color: (r) => r.gate === 'P2 Hit Ad' || r.gate === 'Graduated' ? 'var(--color-ok)' : dash.colors[0] });
+  });
+  const tsOutcomeColors = { 'P2 Hit Ad': 'var(--color-ok)', 'P1 Winner': dash.colors[2], 'P2 Loser': 'var(--color-bad)', 'Mid-tier': 'var(--color-warn)', 'Below baseline': dash.colors[5], 'SP pending': dash.colors[1], 'In test': dash.colors[3], 'Stopped early': 'var(--cds-chart-muted)' };
+  const tsStack = [['hit', 'P2 Hit Ad'], ['winner', 'P1 Winner'], ['loser', 'P2 Loser'], ['mid', 'Mid-tier'], ['below', 'Below baseline'], ['pending', 'SP pending'], ['in_test', 'In test'], ['stopped', 'Stopped early']];
+  dash.draw('legend-testing', (el) => {
+    el.replaceChildren(...tsStack.map(([k, label]) => { const s = document.createElement('span'); const i = document.createElement('i'); i.style.background = tsOutcomeColors[label]; s.append(i, label); return s; }));
+  });
+  dash.draw('chart-testweeks', (el) => {
+    const src = dash.data('testing_weeks');
+    if (!chartState(el, src)) return;
+    const rows = src.data.filter((r) => r.market === tsState.market);
+    if (!rows.length) { chartState(el, { status: 'empty' }); return; }
+    const width = Math.max(280, el.clientWidth || 600), height = 220;
+    const svg = svgIn(el, width, height, 'Testing ads per week of entry, stacked by outcome');
+    const y = d3.scaleLinear().domain([0, d3.max(rows, (r) => +r.entered) || 1]).nice().range([height - 28, 12]);
+    const ticks = y.ticks(4);
+    const left = measure(svg, ticks, fmt.int) + 10;
+    const x = d3.scaleBand().domain(rows.map((r) => r.week)).range([left, width - 10]).paddingInner(0.25);
+    svg.append('g').selectAll('line').data(ticks).join('line').attr('class', 'cr-grid-line').attr('x1', left).attr('x2', width - 10).attr('y1', (d) => y(d)).attr('y2', (d) => y(d));
+    svg.append('g').attr('class', 'cr-axis').attr('transform', `translate(${left},0)`).call(d3.axisLeft(y).tickValues(ticks).tickFormat(fmt.int).tickSize(0)).select('.domain').remove();
+    const every = Math.max(1, Math.ceil(rows.length / Math.max(2, Math.floor((width - left) / 70))));
+    svg.append('g').attr('class', 'cr-axis').attr('transform', `translate(0,${height - 28})`)
+      .call(d3.axisBottom(x).tickValues(rows.map((r) => r.week).filter((w, i) => i % every === 0)).tickFormat((w) => fmt.date(parseDate(w))).tickSize(0).tickPadding(8)).select('.domain').remove();
+    const g = svg.selectAll('g.wk').data(rows).join('g').attr('class', 'wk').attr('transform', (r) => `translate(${x(r.week)},0)`);
+    g.each(function (r) {
+      let acc = 0;
+      for (const [k, label] of tsStack) {
+        const v = +r[k] || 0; if (!v) continue;
+        d3.select(this).append('rect').attr('x', 0).attr('width', x.bandwidth()).attr('y', y(acc + v)).attr('height', y(acc) - y(acc + v)).style('fill', tsOutcomeColors[label]);
+        acc += v;
+      }
+    });
+    const tip = tooltip(el);
+    g.on('mousemove', (event, r) => { const [mx, my] = d3.pointer(event, el); tip.show(mx, my, [`Week of ${fmt.dateFull(parseDate(r.week))}: ${r.entered} entered`, ...tsStack.filter(([k]) => r[k]).map(([k, label]) => `${label}: ${r[k]}`), `${r.graduated} graduated · ${fmt.money(r.spend)} test spend`]); })
+      .on('mouseleave', () => tip.hide());
+  });
+  const tsFilter = (r) => {
+    if (tsState.market !== 'All' && r.market !== tsState.market) return false;
+    if (tsState.window !== 'all') { const since = new Date(Date.parse(r.data_through || new Date().toISOString().slice(0, 10)) - (+tsState.window) * 86400000).toISOString().slice(0, 10); if (r.test_start < since) return false; }
+    if (tsState.outcome && r.outcome !== tsState.outcome) return false;
+    if (tsState.grad && !r.graduated) return false;
+    if (tsState.search) { const q = tsState.search.toLowerCase(); if (![r.name, r.ad_name, r.testing_campaign, r.ad_id].join(' ').toLowerCase().includes(q)) return false; }
+    return true;
+  };
+  const outcomeClass = { 'P2 Hit Ad': 'strong', 'P1 Winner': 'ok', 'P2 Loser': 'bad', 'Mid-tier': 'warn', 'Below baseline': 'bad', 'SP pending': '', 'In test': '', 'Stopped early': 'muted' };
+  makeTable('testing-table', 'ts-body', 'testing_rows', [
+    { field: 'name', cls: 'cr-name', render: (td, r) => { td.textContent = r.name; if (!r.on_roadmap) td.appendChild(chip('not on roadmap', 'muted')); if (r.active) td.appendChild(chip('live', 'ok')); } },
+    { field: 'market' }, { field: 'test_start' },
+    { field: 'test_days', numeric: true, format: (v) => num(v, fmt.int) },
+    { field: 'outcome', render: chipCell('outcome', outcomeClass) },
+    { field: 'spend', numeric: true, format: (v) => num(v, fmt.money) },
+    { field: 'activity', numeric: true, format: (v) => num(v, fmt.int) },
+    { field: 'days_to_10', numeric: true, format: (v) => num(v, fmt.int) },
+    { field: 'spend_to_10', numeric: true, format: (v) => num(v, fmt.money) },
+    { field: 'trial_starts', numeric: true, format: (v) => num(v, fmt.int) },
+    { field: 'cpft', numeric: true, format: (v) => num(v, fmt.money2) },
+    { field: 'sp', numeric: true, format: (v) => num(v, fmt.sp) },
+    { field: 'sp_status', render: chipCell('sp_status', spClass) },
+    { field: 'graduated_label', render: (td, r) => { if (r.graduated) td.appendChild(chip('Graduated' + (r.grad_start ? ' ' + r.grad_start : ''), 'ok')); else td.textContent = '—'; } },
+    { field: 'grad_spend', numeric: true, format: (v) => num(v, fmt.money) },
+    { field: 'grad_cpft', numeric: true, format: (v) => num(v, fmt.money2) },
+    { field: 'status', render: chipCell('status', statusClass) },
+    { field: 'pause_reason' }, { field: 'testing_campaign' }
+  ], tsState, { key: (r) => r.ad_id, limit: 400, filter: tsFilter, isSelected: (r, sel) => sel.ad_ids && String(sel.ad_ids).split(',').includes(r.ad_id), onSelect: selectAd });
+  countDraw('ts-count', 'testing_rows', tsFilter);
 
   /* ---- Win by dimension ---- */
   const wdState = { sort: 'win_rate', dir: 'desc', dim: 'category', min: 3 };
