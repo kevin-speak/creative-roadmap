@@ -7,7 +7,7 @@
 -- placement × country × os, so HK ads are scored against HK ads only — the two markets never
 -- mix. The Phase-2 CPFT verdict ($58 threshold) is Taiwan-specific and is emitted for Taiwan
 -- rows only; HK rows get sp_score / sp_tier but phase2_result = NULL until an HK threshold
--- is agreed (see automation/README.md "SP score").
+-- is agreed (see docs/process.md "SP score").
 --
 -- The funnel table lags real time by ~2 days; every date here is derived from the data
 -- itself, never CURRENT_DATE() — do not "modernize" it.

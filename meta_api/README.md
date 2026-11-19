@@ -1,6 +1,6 @@
 # Meta Marketing API setup
 
-Direct, read-only access to the **Speak ZH** ad account (`act_1148917790153640`, Speak business `1228002260697334`) through the Graph API — independent of the Meta Ads MCP connector. Use it when a routine, script, or fresh session needs Meta data and the MCP grant isn't available (see the architecture note in [`../automation/README.md`](../automation/README.md)).
+Direct, read-only access to the **Speak ZH** ad account (`act_1148917790153640`, Speak business `1228002260697334`) through the Graph API — independent of the Meta Ads MCP connector. Use it when a routine, script, or fresh session needs Meta data and the MCP grant isn't available (see the architecture note in [`../docs/operations.md`](../docs/operations.md)).
 
 ```
 meta_api/
@@ -105,7 +105,7 @@ spend = {r["ad_id"]: float(r["spend"]) for r in client.get_ad_insights("maximum"
 
 ## Step 6 — Wire it into the routines (optional)
 
-The runbooks in `automation/routines/` currently call the Meta Ads MCP tool `ads_get_ad_entities`. To make them MCP-independent, replace that step with `python3 meta_api/fetch_ads.py --json /tmp/ads.json` and read the file — the columns map 1:1 to what STEP 2 of the nightly sync needs (`ad_id`, `ad_name`, `effective_status`, `created_time`, `spend_lifetime`, `spend_last_7d`, `frequency_last_7d`). The session running the routine must have `.env` available (or `META_*` set as environment variables in the Claude Code environment settings).
+The runbooks in `routines/` currently call the Meta Ads MCP tool `ads_get_ad_entities`. To make them MCP-independent, replace that step with `python3 meta_api/fetch_ads.py --json /tmp/ads.json` and read the file — the columns map 1:1 to what the Meta pull in `routines/daily_sync.md` needs (`ad_id`, `ad_name`, `effective_status`, `created_time`, `spend_lifetime`, `spend_last_7d`, `frequency_last_7d`). The session running the routine must have `.env` available (or `META_*` set as environment variables in the Claude Code environment settings).
 
 ## Operating notes
 
