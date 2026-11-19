@@ -32,13 +32,13 @@ Fill the naming fields on the Notion row; the daily sync builds this string when
 | Daily sync — intake | 07:00, 15:00 | Ideas → Plan rows, influencer licence intake from #tw-ads, Ready-to-Test names and pings |
 | Daily sync — full | 22:00 | Binds live Meta ads to rows, pause / relaunch detection, SP score, CPFT, LTV/CAC, spend, hit ads, archive |
 | Weekly review | Mon 10:30 | Iteration briefs for proven ads, weekly log, pause reasons closing soon, naming hygiene |
-| Ideas sync | Wed 17:00 | #tw-creative posts → Ideas board |
+| Ideas intake | Wed 17:00 | #tw-creative posts → Ideas board, each with a preview and a suggested priority |
 
 ## Layout
 
 ```
 docs/        process, naming convention, Notion schema, operations
-routines/    daily_sync.md · weekly_review.md · cleanup_2026-11.md (one-time)
+routines/    ideas_intake.md · daily_sync.md · weekly_review.md · cleanup_2026-11.md (one-time)
 roadmap/     naming.py (parse / build / match names) · audit.py (duplicates, backfill, pause backlog)
 sql/         sp_score.sql · ltv_cac.sql (BigQuery) · notion_roadmap_export.sql (Notion)
 meta_api/    read-only Marketing API client
