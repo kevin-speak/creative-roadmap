@@ -70,7 +70,7 @@ All sit under Speak OS → TW/HK Market → Creative.
 
 ## Ideas board properties the automation writes
 
-`Concept` (title), `Category`, `Type`, `Pillar`, `Ref`, `Creator`, `Memo`, `Status` (set to `Not started` on creation, `Done` by the daily sync's back-sync), `Priority` (suggested by the intake: High · Mid · Low), and `Preview` (text, added 2026-11-19: the intake's short description of the dropped creative; the full preview is in the page body).
+`Concept` (title), `Category`, `Type`, `Pillar`, `Ref`, `Creator`, `Memo`, `Status` (set to `Not started` on creation, `Done` by the daily sync's back-sync), `Priority` (suggested by the bi-weekly brief when empty: High · Mid · Low), and `Preview` (text, added 2026-11-19: the brief's short description of the dropped creative; the full preview is in the page body).
 
 ## Markers the automation leaves as page comments
 

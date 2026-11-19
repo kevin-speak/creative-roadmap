@@ -6,7 +6,7 @@ How a TW/HK creative moves from an idea to an archived learning, who moves it, a
 
 | # | Stage | Who | What happens | Roadmap status |
 |---|---|---|---|---|
-| 1 | Idea | Anyone | Post in #tw-creative, with a screenshot or screen recording when sharing a link. The Wednesday intake files it in the Ideas board and writes a preview: a description of the image or video, iteration ideas for a winning ad, and a suggested priority. | — |
+| 1 | Idea | Anyone | Post in #tw-creative, with a screenshot or screen recording when sharing a link. The Wednesday intake files it in the Ideas board. On the morning of each bi-weekly roadmap meeting (Thursday 16:00) the brief writes a preview on every new idea — a description of the image or video, Motion's analysis for a winning ad, a suggested priority — and posts the pre-read. | — |
 | 2 | Prioritise | Lead | Set the idea's `Status` to **In progress**. | — |
 | 3 | Plan | Daily sync | Creates one roadmap row per idea (`Reference` = the idea). | Plan |
 | 4 | Produce | Designer / creator owner | Fill the naming fields as they become known, attach files, move the status. | Production |
@@ -62,7 +62,8 @@ CPFT, LTV/CAC (cohort LTV month 35), market and the trailing 7-day window come f
 
 | Run | Taipei time | Runbook |
 |---|---|---|
-| Ideas intake (Slack → Ideas board, with a preview on each idea) | Wed 17:00 | [`routines/ideas_intake.md`](../routines/ideas_intake.md) |
+| Ideas intake (Slack → Ideas board) | Wed 17:00 | [`routines/ideas_intake.md`](../routines/ideas_intake.md) |
+| Ideas brief (previews + pre-read for the bi-weekly roadmap meeting) | every second Thu 09:45, from 2026-11-26 | [`routines/ideas_brief.md`](../routines/ideas_brief.md) |
 | Daily sync — intake | 07:00, 15:00 | [`routines/daily_sync.md`](../routines/daily_sync.md), Part A |
 | Daily sync — full | 22:00 | same runbook, Parts B then A |
 | Weekly review | Mon 10:30 | [`routines/weekly_review.md`](../routines/weekly_review.md) |
