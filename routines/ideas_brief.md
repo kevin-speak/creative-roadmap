@@ -79,11 +79,16 @@ Do not edit the idea's page body. The full preview lives on the brief page.
 
 ## STEP 4 — The brief page
 
-The brief is one running Notion page, **Weekly Creative Ideas Brief**: `https://app.notion.com/p/41d792ec2f108097b4e2f2211a3b23be`. Each Thursday adds one dated toggle at the **top** (`notion-update-page`, `insert_content`, position `start`). Never edit or remove earlier weeks, and never touch the "Ideas awaiting a decision" table at the bottom of the page: it is a live view of the Ideas board (Status = Not started) where the team changes Status.
+The brief is one running Notion page, **Weekly Creative Ideas Brief**: `https://app.notion.com/p/41d792ec2f108097b4e2f2211a3b23be`. Its layout, set by the team:
 
-Fetch the page first. If a toggle for today's date already exists, replace only that toggle (`update_content`) instead of adding a second one.
+```
+## Ideas Awaiting      ← live table of the Ideas board (Status = Not started); never touch it
+## Weekly Briefing     ← one dated toggle per Thursday, newest first
+```
 
-Every idea is written as a mention of its Ideas-board page, so the title is a live link. Escape dollar signs as `\$`. Leave out a section that has no ideas.
+Fetch the page first. Add this week's toggle directly under the `## Weekly Briefing` heading, above the earlier weeks: `notion-update-page` with `update_content`, `old_str` = `## Weekly Briefing`, `new_str` = `## Weekly Briefing` + a blank line + the new toggle. If a toggle for today's date already exists, replace only that toggle. Never edit or remove earlier weeks or anything above the heading. People edit this page by hand; keep whatever they changed.
+
+Every idea is written as a mention of its Ideas-board page, so the title is a live link. Each label sits on its own bullet with the text as a child paragraph beneath it (the team's format, for readability). Escape dollar signs as `\$`. Leave out a section that has no ideas.
 
 ```
 <toggle>
@@ -93,8 +98,18 @@ Every idea is written as a mention of its Ideas-board page, so the title is a li
 
 <mention url="<idea page URL>" /> · <poster> · <Type> (<length>, visuals only — for video)
 
-- **What it is:** <the description from Step 2, on-screen text quoted in its original language>
-- **Why High:** <one-line reason>
+<ul>
+<li>
+<b>What it is:</b>
+
+<the description from Step 2, on-screen text quoted in its original language>
+</li>
+<li>
+<b>Why High:</b>
+
+<one-line reason>
+</li>
+</ul>
 
 ### 🟡 Mid
 
@@ -108,9 +123,23 @@ Every idea is written as a mention of its Ideas-board page, so the title is a li
 
 <mention url="<idea page URL>" /> · <poster>
 
-- **Parent ad:** <Item> · SP <score> · CPFT \$<cpft> · \$<spend> · <roadmap link>
-- **Motion analysis:** <format · summary · hook · CTAs, as Motion returned them>
-- **Iteration ideas (Motion):** <copied from the Motion chat, with its link — or "not generated in Motion yet">
+<ul>
+<li>
+<b>Parent ad:</b>
+
+<Item> · SP <score> · CPFT \$<cpft> · \$<spend> · <roadmap link>
+</li>
+<li>
+<b>Motion analysis:</b>
+
+<format · summary · hook · CTAs, as Motion returned them>
+</li>
+<li>
+<b>Iteration ideas (Motion):</b>
+
+<copied from the Motion chat, with its link — or "not generated in Motion yet">
+</li>
+</ul>
 
 ### 🏆 Iteration briefs from the Monday review
 
