@@ -1,18 +1,10 @@
-# Ideas brief — every second Thursday, 09:45 Taipei
+# Ideas brief — Thursdays 09:45 Taipei
 
-The pre-read for the **TW/HK Bi-Weekly Creative Roadmap** meeting (Thursdays 16:00 Taipei). It goes through everything collected since the last meeting, writes a preview on each idea, and posts one brief to #tw-creative, so the team can judge each idea in the meeting without going back to Slack.
+Every Thursday morning this goes through the ideas collected on Wednesday (and any earlier ones still without a preview), writes a preview on each, and posts one brief to #tw-creative. On meeting weeks it is the pre-read for the **TW/HK Bi-Weekly Creative Roadmap** meeting (Thursdays 16:00 Taipei), so the team can judge each idea without going back to Slack.
 
-This routine edits idea pages (preview only) and posts one Slack message. It does not touch the roadmap and never changes an idea's `Status`: decisions are made in the meeting.
+This routine edits idea pages (preview only) and posts one Slack message. It does not touch the roadmap and never changes an idea's `Status`: decisions are made by the team.
 
-## STEP 0 — Is today a meeting Thursday?
-
-The task fires every Thursday; the meeting is every second one, anchored on **2026-11-26**.
-
-```bash
-python3 -c "import datetime as d,zoneinfo as z; t=d.datetime.now(z.ZoneInfo('Asia/Taipei')).date(); print((t-d.date(2026,11,26)).days % 14)"
-```
-
-If the result is not `0`, reply `Not a meeting Thursday — skipped.` and stop. A fire payload starting with `RUN NOW` skips this check; one starting with `DRY RUN` skips it too, does every read, prints the previews and the brief, and writes nothing. If the meeting moves to the other week, change the anchor date above.
+A fire payload starting with `DRY RUN` does every read, prints the previews and the brief, and writes nothing.
 
 ## IDs and rules
 
@@ -101,8 +93,8 @@ For each idea, with `notion-update-page`:
 Post one message to `C0ASFA5F1B3`:
 
 ```
-🗂️ *Creative ideas brief — for the <YYYY-MM-DD> roadmap meeting*
-X ideas collected since <date of the previous meeting> · previews are in the Ideas board (`Preview` column)
+🗂️ *Creative ideas brief — <YYYY-MM-DD>*
+X new ideas this week · previews are in the Ideas board (`Preview` column)
 
 *High*
 • <Concept linked to the page> — <poster> · <Type> · <one-line preview>
@@ -114,9 +106,9 @@ X ideas collected since <date of the previous meeting> · previews are in the Id
 *Winning iterations*
 • <Concept linked> — <parent ad> · SP <score> · Motion ideas: <ready | not generated yet>
 *Iteration briefs from the Monday review* — <Concept linked>, …
-*No visual — please add a screenshot before the meeting:* <Concept> (<@poster>), …
+*No visual — please add a screenshot:* <Concept> (<@poster>), …
 ```
 
-Leave out an empty section. If nothing was collected, post `No new ideas since the last roadmap meeting.`
+Leave out an empty section. If there is nothing to preview, post `No new ideas this week.`
 
 End your task output with the same brief.
