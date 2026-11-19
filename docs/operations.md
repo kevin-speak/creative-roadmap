@@ -4,13 +4,13 @@ How the scheduled tasks are wired, how to switch them on, and what to check when
 
 ## Current state (2026-11-19)
 
-**Every roadmap task is paused.** The Notion schema changed on 2026-11-19 and the old runbooks referenced removed columns, so all five tasks were disabled before the 22:00 run. Nothing syncs until the go-live steps below are done.
+**Every roadmap sync task is paused; only the ideas intake and the ideas brief run.** The Notion schema changed on 2026-11-19 and the old runbooks referenced removed columns, so all five tasks were disabled before the 22:00 run. Nothing syncs until the go-live steps below are done.
 
 | Task | ID | State | Plan |
 |---|---|---|---|
 | TW Creative Roadmap nightly sync | `trig_01Mu2vcfPW9zXbT9N1s9nXn8` | paused | becomes **TW Creative Roadmap daily sync** |
 | TW winning creative iteration analyst | `trig_01NJznSip628rN38F1f1jHAL` | paused | becomes **TW Creative weekly review** |
-| TW Creative pipeline sync | `trig_01Bz5iWJZ9cBkXjhd2YeCaF4` | paused | its job folds into the daily sync; the task is reused as **TW Creative ideas brief** |
+| TW Creative ideas brief (was: pipeline sync) | `trig_01Bz5iWJZ9cBkXjhd2YeCaF4` | **running** since 2026-11-19, Thu 09:45 Taipei | the old pipeline job folds into the daily sync |
 | August duplicates (persistent-session set) | `trig_01EZ44tzBdZfTfJy1scvf128`, `trig_011EhN2rJaHcNoAKHPAY8it3`, `trig_01JqGLRu34KTW38yFpWNpDDt` | paused | delete |
 | Creative Ideas Sync to Notion (Wed 17:00) | `trig_01CtXgi8zb5PzTXAMPzaAdwr` | running, old prompt | stays collection-only; repoint to `routines/ideas_intake.md` |
 

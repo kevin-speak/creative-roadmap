@@ -6,7 +6,7 @@ How a TW/HK creative moves from an idea to an archived learning, who moves it, a
 
 | # | Stage | Who | What happens | Roadmap status |
 |---|---|---|---|---|
-| 1 | Idea | Anyone | Post in #tw-creative, with a screenshot or screen recording when sharing a link. The Wednesday intake files it in the Ideas board. Every Thursday morning (the roadmap meeting is every second Thursday at 16:00) the brief writes a preview on every new idea — a description of the image or video, Motion's analysis for a winning ad, a suggested priority — and posts the pre-read. | — |
+| 1 | Idea | Anyone | Post in #tw-creative, with a screenshot or screen recording when sharing a link. The Wednesday intake files it in the Ideas board. Every Thursday morning (the roadmap meeting is every second Thursday at 16:00) the brief writes a preview on every new idea — a description of the image or video, Motion's analysis for a winning ad, a suggested priority — and adds the week's section to the Weekly Creative Ideas Brief page in Notion. | — |
 | 2 | Prioritise | Lead | Set the idea's `Status` to **In progress**. | — |
 | 3 | Plan | Daily sync | Creates one roadmap row per idea (`Reference` = the idea). | Plan |
 | 4 | Produce | Designer / creator owner | Fill the naming fields as they become known, attach files, move the status. | Production |
