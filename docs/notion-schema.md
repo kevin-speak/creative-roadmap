@@ -68,6 +68,10 @@ All sit under Speak OS → TW/HK Market → Creative.
 
 **Removed in the 2026-11 update** — do not reference: `Name` (now `Item`), `Meta ad ID(s)` (now `Ad ID(s)`), `Ad Name` (legacy names moved to `Description`), `Watch flag`, `Hit ad`, `Learnings`, `Priority`, `Source`. The numbered pillars (`01. Speak 學習路徑` …) no longer exist on the roadmap `Category`; they remain on the Ideas board as `Pillar`.
 
+## Ideas board properties the automation writes
+
+`Concept` (title), `Category`, `Type`, `Pillar`, `Ref`, `Creator`, `Memo`, `Status` (set to `Not started` on creation, `Done` by the daily sync's back-sync), `Priority` (suggested by the intake: High · Mid · Low), and `Preview` (text, added 2026-11-19: the intake's short description of the dropped creative; the full preview is in the page body).
+
 ## Markers the automation leaves as page comments
 
 | Comment | Meaning |

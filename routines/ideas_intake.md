@@ -87,6 +87,7 @@ One page per new message in the Ideas data source:
 
 - `Concept`, `Category`, `Type`, `Pillar`, `Ref` from Step 3 · `Status` = `Not started` · `Priority` from Step 4
 - `Creator` = the sender's display name · `Memo` = the original message text, at most 200 characters
+- `Preview` = the **What it is** description from Step 4 as plain text, at most 400 characters (for a winning iteration: the parent ad and Motion's summary), so the board can be read in table view without opening each page
 
 Page body:
 
