@@ -7,9 +7,9 @@ How a TW/HK creative moves from an idea to an archived learning, who moves it, a
 | # | Stage | Who | What happens | Roadmap status |
 |---|---|---|---|---|
 | 1 | Idea | Anyone | Post in #tw-creative, with a screenshot or screen recording when sharing a link. The Wednesday intake files it in the Ideas board. Every Thursday morning (the roadmap meeting is every second Thursday at 16:00) the brief writes a preview on every new idea — a description of the image or video, Motion's analysis for a winning ad, a suggested priority — and adds the week's section to the Weekly Creative Ideas Brief page in Notion. | — |
-| 2 | Prioritise | Lead | Set the idea's `Status` to **In progress**. | — |
-| 3 | Plan | Daily sync | Creates one roadmap row per idea (`Reference` = the idea). | Plan |
-| 4 | Produce | Designer / creator owner | Fill the naming fields as they become known, attach files, move the status. | Production |
+| 2 | Decide | Team, in the bi-weekly roadmap meeting | Read the Weekly Creative Ideas Brief and set each idea's `Status`: **In progress** = go, Pending = park, Archive = drop. | — |
+| 3 | Produce | Designer / creator owner | Production is tracked in the owner's own project tool. Nothing is created on the roadmap automatically. | — |
+| 4 | Enter the roadmap | Designer / creator owner | When the creative exists, create the roadmap row, paste the idea's page URL into `Reference`, and fill the naming fields. | Production or Ready-to-Test |
 | 5 | Hand off | Designer / creator owner | Set **Ready-to-Test**. The daily sync builds the ad name and file name from the naming fields and posts them in #tw-creative, or says which fields are missing. | Ready-to-Test |
 | 6 | Launch | Paid marketer | Upload to Meta using that exact ad name. | Ready-to-Test |
 | 7 | Bind | Daily sync (22:00) | Matches the live ad to the row by name, writes the ad ID, stamps the launch date, marks the idea Done. | On Air |

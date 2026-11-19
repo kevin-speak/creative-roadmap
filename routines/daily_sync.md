@@ -1,10 +1,10 @@
 # Daily sync — TW Creative Roadmap
 
-One runbook, two modes. It keeps the Notion roadmap in step with the Ideas board, #tw-ads, Meta and BigQuery, and posts **one** message to #tw-creative per run (nothing when nothing happened).
+One runbook, two modes. It keeps the Notion roadmap in step with #tw-ads, Meta and BigQuery, and closes ideas on the Ideas board once their creative is made, and posts **one** message to #tw-creative per run (nothing when nothing happened).
 
 | Mode | When (Taipei) | Does |
 |---|---|---|
-| `INTAKE` | 07:00, 15:00 | Part A only: ideas → Plan rows, influencer intake, Ready-to-Test names and pings |
+| `INTAKE` | 07:00, 15:00 | Part A only: influencer intake, Ready-to-Test names and pings, closing ideas that reached the roadmap |
 | `FULL` | 22:00 | Part B (Meta + BigQuery reconcile, statuses, metrics, hygiene), then Part A |
 
 Pick the mode from the clock: `TZ=Asia/Taipei date +%H` ≥ 20 → `FULL`, otherwise `INTAKE`. A fire payload that starts with `MODE=FULL`, `MODE=INTAKE` or `DRY RUN` overrides the clock. In `DRY RUN` do every read and print the report you would have posted, but write nothing to Notion or Slack.
@@ -127,33 +127,27 @@ Keep, for the report only (there is no field for it): **pause candidates** = On 
 
 # Part A — intake (both modes)
 
-## A1 — Ideas → Plan rows
+## A1 — Close ideas that reached the roadmap
+
+Ideas are **not** promoted to the roadmap automatically. An idea stays on the Ideas board until someone starts making it and creates the roadmap row themselves, with the idea's page URL in `Reference`. This step only closes the loop afterwards.
 
 ```sql
-SELECT url, "Concept", "Status", "Category", "Type", "Owner", "Ref"
-FROM "collection://921b7b9b-effe-411d-9fc2-ca99eb48f328"
-WHERE "Status" IN ('In progress','Done')
-ORDER BY url LIMIT 100 OFFSET 0
-```
-
-```sql
-SELECT url, "Reference", "Production Status"
+SELECT url, "Reference", "Production Status", "Ad ID(s)", "date:Launch date:start"
 FROM "collection://46a9a0c5-2240-4576-8574-ce81793d224b"
-WHERE "Reference" LIKE '%notion%'
+WHERE "Reference" LIKE '%notion%' AND "Production Status" IN ('Ready-to-Test','On Air','Pause','Archive')
 ORDER BY url LIMIT 100 OFFSET 0
 ```
 
-Page both (rule 1). The second query deliberately includes Archive rows. Compare by the 32-hex page ID inside each URL. For every `In progress` idea with **no** roadmap row in any status, create one:
+```sql
+SELECT url, "Concept", "Status"
+FROM "collection://921b7b9b-effe-411d-9fc2-ca99eb48f328"
+WHERE "Status" = 'In progress'
+ORDER BY url LIMIT 100 OFFSET 0
+```
 
-- `Item` = the idea's `Concept` · `Production Status` = `Plan` · `Reference` = the idea URL (the dedupe key)
-- `Format` from `Type`: Video / UGC / Motion → `Video`, Static / Image → `Image`
-- `Legacy Cate.` from `Type`: UGC → `UGC`, Motion → `Motion`, Video → `Video`, Static / Image → `Static`
-- `Owner` copied · `Channel` = `["Meta"]` · `Market` = `TW 🇹🇼`
-- `Parent creative` = the roadmap page in the idea's `Ref`, when the idea's `Category` is `Winning Iteration`
+Page both (rule 1) and compare by the 32-hex page ID inside each URL. An `In progress` idea that a roadmap row at Ready-to-Test or later points to → set the idea's `Status` to `Done`. An Archive row with no ad ID and no Launch date does not count: it is a placeholder that was archived without ever being made. Touch nothing else on the Ideas board, and never create a roadmap row here.
 
-At most 20 per run, oldest ideas first.
-
-**Back-sync:** an idea whose roadmap row is Ready-to-Test, On Air, Pause or Archive and whose `Status` is `In progress` → `Done`. Touch nothing else on the Ideas board.
+When a roadmap row's `Reference` is a `Winning Iteration` idea and its `Parent creative` is empty, set `Parent creative` to the roadmap page in that idea's `Ref`.
 
 ## A2 — #tw-ads influencer intake
 
@@ -208,7 +202,7 @@ Post one message to `C0ASFA5F1B3`. Include only sections that have content; if n
 *🏆 Hit ads* — <Item> (SP <score>, CPFT $<cpft>) → #hit-ads-library
 *👀 Watch* — pause candidates: <names> · CPFT drifting: <names>
 *⚠️ Licence expiring* — <Item>: <days> days left
-*🧹 Housekeeping* — <n> archived · <n> pause reasons defaulted to Other · <n> ideas → Plan · <n> ideas → Done · <n> licence intakes
+*🧹 Housekeeping* — <n> archived · <n> pause reasons defaulted to Other · <n> ideas → Done · <n> licence intakes
 *🔤 Naming issues* — <ad name>: <error>
 *Data notes* — BigQuery through <MAX(date)> · skipped / capped work · errors
 ```

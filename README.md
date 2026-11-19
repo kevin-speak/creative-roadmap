@@ -29,7 +29,7 @@ Fill the naming fields on the Notion row; the daily sync builds this string when
 
 | Run | Taipei time | What it does |
 |---|---|---|
-| Daily sync — intake | 07:00, 15:00 | Ideas → Plan rows, influencer licence intake from #tw-ads, Ready-to-Test names and pings |
+| Daily sync — intake | 07:00, 15:00 | Influencer licence intake from #tw-ads, Ready-to-Test names and pings, closing ideas whose creative reached the roadmap |
 | Daily sync — full | 22:00 | Binds live Meta ads to rows, pause / relaunch detection, SP score, CPFT, LTV/CAC, spend, hit ads, archive |
 | Weekly review | Mon 10:30 | Iteration briefs for proven ads, weekly log, pause reasons closing soon, naming hygiene |
 | Ideas intake | Wed 17:00 | #tw-creative posts → Ideas board |
