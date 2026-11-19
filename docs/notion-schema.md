@@ -10,6 +10,7 @@ Snapshot of 2026-11-19, after the naming-convention update. The runbooks depend 
 | 🗺️ Creatives Ideas | `collection://921b7b9b-effe-411d-9fc2-ca99eb48f328` | Idea backlog; `In progress` promotes an idea to the roadmap |
 | Influencer Licenses | `collection://bf9dd8a5-0331-47a3-9d04-9c15bea80071` | Licence terms and days left per influencer asset |
 | 🥯 TW/HK Design Board | `collection://6e5a40fb-e8f0-4f59-bc59-2b880e62e6b7` | Designer queue (not touched by automation) |
+| Weekly Creative Ideas Brief | page `41d792ec2f108097b4e2f2211a3b23be` | "Ideas Awaiting" (live table of undecided ideas) on top, then "Weekly Briefing" with one dated toggle per Thursday, ideas as mentions |
 | 🗃️ Creative Projects | `collection://3c3792ec-2f10-8011-8cdf-000bbc38ad01` | Project grouping (`Project` relation; not touched) |
 
 All sit under Speak OS → TW/HK Market → Creative.
