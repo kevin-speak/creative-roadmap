@@ -58,7 +58,7 @@
 --      lands inside that band, so it is what ltv_cac reports.
 --
 --   6. CPFT = spend / trial_starts over the lifetime (raw trial_starts, matching
---      automation/sp_score.sql).
+--      sql/sp_score.sql).
 --
 --   7. (added 2026-09-08) TRAILING-7-DAY WINDOW for the nightly watch flag: spend_7d,
 --      trial_starts_7d and cpft_7d cover the 7 funnel days ending at MAX(date). The
