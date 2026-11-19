@@ -88,7 +88,7 @@ The brief is one running Notion page, **Weekly Creative Ideas Brief**: `https://
 
 Fetch the page first. Add this week's toggle directly under the `## Weekly Briefing` heading, above the earlier weeks: `notion-update-page` with `update_content`, `old_str` = `## Weekly Briefing`, `new_str` = `## Weekly Briefing` + a blank line + the new toggle. If a toggle for today's date already exists, replace only that toggle. Never edit or remove earlier weeks or anything above the heading. People edit this page by hand; keep whatever they changed.
 
-Every idea is written as a mention of its Ideas-board page, so the title is a live link. Each label sits on its own bullet with the text as a child paragraph beneath it (the team's format, for readability). Escape dollar signs as `\$`. Leave out a section that has no ideas.
+Every idea is written as a mention of its Ideas-board page, so the title is a live link. The idea's title line is a paragraph with a blue background (`color="blue_bg"`), in every priority section, so each idea is easy to find when scanning. Each label sits on its own bullet with the text as a child paragraph beneath it. This is the team's format; follow it exactly. Escape dollar signs as `\$`. Leave out a section that has no ideas.
 
 ```
 <toggle>
@@ -96,7 +96,9 @@ Every idea is written as a mention of its Ideas-board page, so the title is a li
 
 ### 🔴 High
 
+<p color="blue_bg">
 <mention url="<idea page URL>" /> · <poster> · <Type> (<length>, visuals only — for video)
+</p>
 
 <ul>
 <li>
@@ -121,7 +123,9 @@ Every idea is written as a mention of its Ideas-board page, so the title is a li
 
 ### 🏆 Winning iterations
 
+<p color="blue_bg">
 <mention url="<idea page URL>" /> · <poster>
+</p>
 
 <ul>
 <li>
